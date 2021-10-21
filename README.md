@@ -11,4 +11,4 @@ This  Lexer is very simple to use. Just follow these steps:
 4 - The lexer will output these tokens on the console screen and will write its output to a  file called "output.txt" as well.
 <br />
 
-<b> Note: Don't worry. If the output.txt file is not already created, the lexer will create it. </b>
+<b> If the output.txt file is not already created, the lexer will create it. </b>
