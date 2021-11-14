@@ -10,9 +10,20 @@
 using namespace std;
 
 list<pair<int, int>> tokenLexeme;
+list<pair<int, int>>::iterator tokenLexemeIt;
 list<pair<int, string>> codeString;
 int newLines = 0;
-
+//struct Token{
+//	Token(string t, string k) {
+//		text = t;
+//		kind = k;
+//	}
+//	string text;
+//	string kind;
+//};
+//enum TokenType {
+//	a=0
+//};
 int getCode(string str)
 {
 	list<pair<int, string>>::iterator it;
@@ -62,33 +73,6 @@ void addTokenPair(int token, int lexeme)
 	temp.first = token;
 	temp.second = lexeme;
 	tokenLexeme.push_back(temp);
-}
-
-void displayTokens()
-{
-	ofstream fout("output.txt");
-	list<pair<int, int>>::iterator it;
-	for (it = tokenLexeme.begin(); it != tokenLexeme.end(); it++)
-	{
-		pair<int, int> temp;
-		temp.first = (*it).first;
-		temp.second = (*it).second;
-
-		string s1, s2;
-		if (temp.first >= 256)
-			s1 = getString(temp.first);
-		else
-			s1 += (char)temp.first;
-
-		if (temp.second >= 256)
-			s2 = getString(temp.second);
-		else
-			s2 += (char)temp.second;
-
-		cout << "('" << s1 << "', '" << s2 << "')" << endl;
-		fout << "('" << s1 << "', '" << s2 << "')" << endl;
-	}
-	fout.close();
 }
 
 bool dataTypes(char str[], long& ptr)
@@ -1055,7 +1039,66 @@ string readFile()
 
 	return myText;
 }
+void displayTokens()
+{
+	ofstream fout("output.txt");
+	list<pair<int, int>>::iterator it;
+	for (it = tokenLexeme.begin(); it != tokenLexeme.end(); it++)
+	{
+		pair<int, int> temp;
+		temp.first = (*it).first;
+		temp.second = (*it).second;
 
+		string s1, s2;
+		if (temp.first >= 256)
+			s1 = getString(temp.first);
+		else
+			s1 += (char)temp.first;
+
+		if (temp.second >= 256)
+			s2 = getString(temp.second);
+		else
+			s2 += (char)temp.second;
+
+		cout << "('" << s1 << "', '" << s2 << "')" << endl;
+		fout << "('" << s1 << "', '" << s2 << "')" << endl;
+	}
+	fout.close();
+}
+pair<string, string> getToken() {
+	pair<string, string> token("","");
+	if (tokenLexemeIt != tokenLexeme.end()) {
+		pair<int, int> temp;
+		temp.first = (*tokenLexemeIt).first;
+		temp.second = (*tokenLexemeIt).second;
+
+		string s1, s2;
+		if (temp.first >= 256)
+			s1 = getString(temp.first);
+		else
+			s1 += (char)temp.first;
+
+		if (temp.second >= 256)
+			s2 = getString(temp.second);
+		else
+			s2 += (char)temp.second;
+
+		token.first = s1;
+		token.second = s2;
+
+		tokenLexemeIt++;
+	}
+	
+	return token;
+}
+void parser()
+{
+	tokenLexemeIt = tokenLexeme.begin();
+	string token = "";
+	while ((token = getToken().first) != "") {
+		cout << token<<endl;
+	}
+}
 int main()
 {
 	initialise();
@@ -1064,7 +1107,14 @@ int main()
 	char data[10240];
 	strcpy_s(data, temp.c_str());
 	if (lex(data))
-		displayTokens();
+		parser();
+	
+	/*cout << "CODETRSINGS!!\n";
+	list<pair<int, string>>::iterator it;
+	for (it = codeString.begin(); it != codeString.end(); it++)
+	{
+		cout << "('" <<it->first << "', '" << it->second << "')" << endl;
+	}*/
 
 }
 
