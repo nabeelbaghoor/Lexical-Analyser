@@ -1155,6 +1155,17 @@ public:
 		//while (!checkToken("\0"))
 		statements();
 	}
+	void num() {
+		if (checkToken("NUM")) {
+			match("NUM");
+		}
+		else if (checkToken("ID")) {
+			match("ID");
+		}
+		else {
+			abort("Bad token: " + currToken);
+		}
+	}
 	void i2() {
 		if (checkToken(";")) {
 			match(";");
@@ -1166,7 +1177,7 @@ public:
 		}
 		else if (checkToken("=")) {
 			match("=");
-			match("NUM");
+			num();
 			if (checkToken(",")) {
 				match(",");
 				match("ID");
@@ -1190,7 +1201,7 @@ public:
 		else if(checkToken("=")){
 			match("=");
 			match("{");
-			match("NUM");
+			num();
 			match("}");
 			match(";");
 		}
@@ -1201,19 +1212,23 @@ public:
 	void i1() {
 		if (checkToken("{")) {
 			match("{");
-			match("NUM");
+			num();
 			match("}");
 			i3();
 		}
 		else {
 			i2();
 		}
-
 	}
 	void k() {
-		/*if (checkToken(",")) {
-
-		}*/
+		if (checkToken(",")) {
+			match(",");
+			alphaNumber();
+			k();
+		}
+		else {
+			abort("Bad token: " + currToken);
+		}
 	}
 	void alphaNumber() {
 		if (checkToken("LIT")) {
@@ -1255,12 +1270,37 @@ public:
 		}
 	}
 	void c2() {
-
+		if (checkToken(";")) {
+			match(";");
+		}
+		else if (checkToken(",")) {
+			match(",");
+			match("ID");
+			c2();
+		}
+		else if (checkToken("=")) {
+			match("=");
+			alphaNumber();
+			if (checkToken(",")) {
+				match(",");
+				match("ID");
+				c2();
+			}
+			else if (checkToken(";")) {
+				match(";");
+			}
+			else {
+				abort("Bad token: " + currToken);
+			}
+		}
+		else {
+			abort("Bad token: " + currToken);
+		}
 	}
 	void c1() {
 		if (checkToken("{")) {
 			match("{");
-			match("NUM");
+			num();
 			match("}");
 			c3();
 		}
