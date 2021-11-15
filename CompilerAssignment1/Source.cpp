@@ -394,13 +394,15 @@ public:
 					flag = true;
 				break;
 			case 1:
-				if (str[ptr + step] >= 'a' && str[ptr + step] <= 'z' || str[ptr + step] >= 'A' && str[ptr + step] <= 'Z' || str[ptr + step] <= ' ')
+				//if (str[ptr + step] >= 'a' && str[ptr + step] <= 'z' || str[ptr + step] >= 'A' && str[ptr + step] <= 'Z' || str[ptr + step] <= ' ')
+				if(str[ptr + step] <= 255)
 				{
 					id += str[ptr + step];
 					step++;
+					state = 2;
 				}
 				else
-					state = 2;
+					flag = true;
 				break;
 			case 2:
 				if (str[ptr + step] == '\'')
@@ -1150,37 +1152,195 @@ public:
 	}
 	void program() {
 		//Parse all the statements in the program.
-		while (!checkToken("\0"))
-			statement();
+		//while (!checkToken("\0"))
+		statements();
 	}
-	void statement() {
+	void i2() {
+		if (checkToken(";")) {
+			match(";");
+		}
+		else if (checkToken(",")) {
+			match(",");
+			match("ID");
+			i2();
+		}
+		else if (checkToken("=")) {
+			match("=");
+			match("NUM");
+			if (checkToken(",")) {
+				match(",");
+				match("ID");
+				i2();
+			}
+			else if (checkToken(";")) {
+				match(";");
+			}
+			else {
+				abort("Bad token: " + currToken);
+			}
+		}
+		else {
+			abort("Bad token: " + currToken);
+		}
+	}
+	void i3() {
+		if (checkToken(";")) {
+			match(";");
+		}
+		else if(checkToken("=")){
+			match("=");
+			match("{");
+			match("NUM");
+			match("}");
+			match(";");
+		}
+		else {
+			abort("Bad token: " + currToken);
+		}
+	}
+	void i1() {
+		if (checkToken("{")) {
+			match("{");
+			match("NUM");
+			match("}");
+			i3();
+		}
+		else {
+			i2();
+		}
+
+	}
+	void k() {
+		/*if (checkToken(",")) {
+
+		}*/
+	}
+	void alphaNumber() {
+		if (checkToken("LIT")) {
+			match("LIT");
+		}
+		else if (checkToken("ID")) {
+			match("ID");
+		}
+		else {
+			abort("Bad token: " + currToken);
+		}
+	}
+	void c4() {
+		if (checkToken("{")) {
+			match("{");
+			alphaNumber();
+			k();
+			match("}");
+			match(";");
+		}
+		else if (checkToken("STR")) {
+			match("STR");
+			match(";");
+		}
+		else {
+			abort("Bad token: " + currToken);
+		}
+	}
+	void c3() {
+		if (checkToken(";")) {
+			match(";");
+		}
+		else if (checkToken("=")) {
+			match("=");
+			c4();
+		}
+		else {
+			abort("Bad token: " + currToken);
+		}
+	}
+	void c2() {
+
+	}
+	void c1() {
+		if (checkToken("{")) {
+			match("{");
+			match("NUM");
+			match("}");
+			c3();
+		}
+		else {
+			c2();
+		}
+	}
+	void declaration() {
+		cout << "Declaration\t";
+		if (checkToken("INT")) {
+			match("INT");
+			match(":");
+			match("ID");
+			i1();
+		}
+		else {
+			match("CHAR");
+			match(":");
+			match("ID");
+			c1();
+		}
+		
+	}
+	void assignment() {
+		cout << "Assignment\t";
+
+	}
+	void whileLoop () {
+		cout << "WhileLoop\t";
+
+	}
+	void IfStatements() {
+		cout << "If\t";
+
+	}
+	void prints() {
+		cout << "Print\t";
+
+	}
+	void input() {
+		cout << "Input\t";
+
+	}
+	void u() {
+
+	}
+	void statements() {
 		if (checkToken("INT") || checkToken("CHAR")) {
-			cout << "Declaration\t";
+			declaration();
+			u();
 			nextToken();
 			cout << endl;
 		}
 		else if (checkToken("ID")) {
-			cout << "Assignment\t";
+			assignment();
+			u();
 			nextToken();
 			cout << endl;
 		}
 		else if (checkToken("WHILE")) {
-			cout << "WhileLoop\t";
+			whileLoop();
+			u();
 			nextToken();
 			cout << endl;
 		}
 		else if (checkToken("IF")) {
-			cout << "If\t";
+			IfStatements();
+			u();
 			nextToken();
 			cout << endl;
 		}
 		else if (checkToken("PRINT")) {
-			cout << "Print\t";
+			prints();
+			u();
 			nextToken();
 			cout << endl;
 		}
 		else if (checkToken("INPUT")) {
-			cout << "Input\t";
+			input();
+			u();
 			nextToken();
 			cout << endl;
 		}
