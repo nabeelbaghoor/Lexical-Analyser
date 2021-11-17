@@ -1,7 +1,7 @@
 int: num;
 char: my_char;
-// lets assign variable my_char a value
-my_char ='d';
+\\ lets assign variable my_char a value
+my_char = 'd';
 print("my char contains: ");
 println(my_char);
 /*
@@ -16,7 +16,7 @@ println(a);
 println(b);
 while c < num:
 {
-int: temp = a+b;
+int: temp = a + b;
 a = b;
 b = temp;
 println(temp);

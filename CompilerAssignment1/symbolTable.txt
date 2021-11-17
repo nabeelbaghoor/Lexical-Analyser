@@ -1,2 +1,6 @@
-('INT', 'INT')
-('CHAR', 'CHAR')
+('INT', 'num')
+('CHAR', 'my_char')
+('INT', 'a')
+('INT', 'b')
+('INT', 'c')
+('INT', 'temp')
