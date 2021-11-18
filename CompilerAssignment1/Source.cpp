@@ -1409,10 +1409,7 @@ public:
 		noOfTabs--;
 	}
 	void declaration() {
-		cout << endl;
-		noOfTabs++;
-		tabs("Declaration");
-		//cout << "Declaration";
+		cout << "Declaration"<<endl;
 		if (checkToken("INT")) {
 			match("INT");
 			match(":");
@@ -1432,8 +1429,7 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		//cout << endl;
-		noOfTabs--;
+		cout << endl;
 	}
 	void R() {
 		cout << endl;
@@ -1552,10 +1548,7 @@ public:
 		cout << endl;
 	}*/
 	void assignment() {
-		cout << endl;
-		noOfTabs++;
-		tabs("Assignment");
-		//cout << "Assignment";
+		cout << "Assignment" << endl;
 		if (checkToken("ID")){ 
 			match("ID");
 			match("=");
@@ -1566,8 +1559,7 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		//cout << endl;
-		noOfTabs--;
+		cout << endl;
 	}
 	//OLD
 	/*void R() {
@@ -1602,10 +1594,7 @@ public:
 		noOfTabs--;
 	}
 	void whileLoop() {
-		cout << endl;
-		noOfTabs++;
-		tabs("WhileLoop");
-		//cout << "WhileLoop";
+		cout << "WhileLoop" << endl;
 		if (checkToken("WHILE")) {
 			match("WHILE");
 			conditionalStatement();
@@ -1618,8 +1607,7 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		//cout << endl;
-		noOfTabs--;
+		cout << endl;
 
 	}
 	void A() {
@@ -1649,10 +1637,7 @@ public:
 		noOfTabs--;
 	}
 	void IfStatements() {
-		cout << endl;
-		noOfTabs++;
-		tabs("If");
-		//cout << "If";
+		cout << "If" << endl;
 		if (checkToken("IF")) {
 			match("IF");
 			prevNoOfTabs = noOfTabs;
@@ -1668,8 +1653,7 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		//cout << endl;
-		noOfTabs--;
+		cout << endl;
 	}
 	void s() {
 		cout << endl;
@@ -1701,10 +1685,7 @@ public:
 		noOfTabs--;
 	}
 	void prints() {
-		cout << endl;
-		noOfTabs++;
-		tabs("Print");
-		//cout << "Print";
+		cout << "Print" << endl;
 		if (checkToken("PRINT")) {
 			match("PRINT");
 			prevNoOfTabs = noOfTabs;
@@ -1718,14 +1699,11 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		//cout << endl;
-		noOfTabs--;
+		cout << endl;
+
 	}
 	void input() {
-		cout << endl;
-		noOfTabs++;
-		tabs("Input");
-		//cout << "Input";
+		cout << "Input" << endl;
 		if (checkToken("INPUT")) {
 			match("INPUT");
 			match("->");
@@ -1735,14 +1713,10 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		//cout << endl;
-		noOfTabs--;
+		cout << endl;
 	}
 	void increment() {
-		cout << endl;
-		noOfTabs++;
-		tabs("increment");
-		//cout << "Increment";
+		cout << "Increment" << endl;
 		if (checkToken("ID")) {
 			match("ID");
 			match("++");
@@ -1751,14 +1725,10 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		//cout << endl;
-		noOfTabs--;
+		cout << endl;
 	}
 	void comment(){
-		cout << endl;
-		noOfTabs++;
-		tabs("comment");
-		//cout << "Comment";
+		cout << "Comment" << endl;
 		if (checkToken("COMMENT")) {
 			match("COMMENT");
 		}
@@ -1769,27 +1739,20 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		//cout << endl;
-		noOfTabs--;
+		cout << endl;
 	}
 	void u() {
-		cout << endl;
-		noOfTabs++;
-		tabs("u");
-		//cout << "u";
+		//cout << "u" << endl;
 		if (checkToken("INT") || checkToken("CHAR") || (checkToken("ID") && checkPeek("++")) || checkToken("ID")
 			|| checkToken("WHILE") || checkToken("IF") || checkToken("PRINT") || checkToken("PRINTLN")
 			|| checkToken("INPUT") || checkToken("COMMENT") || checkToken("/")) {
 			prevNoOfTabs = noOfTabs;
 			statements();
 		}
-		noOfTabs--;
+		//cout << endl;
 	}
 	void statements() {
-		cout << endl;
-		noOfTabs++;
-		tabs("statements");
-		//cout << "statements";
+		cout<<"statements"<<endl;
 		if (checkToken("INT") || checkToken("CHAR")) {
 			prevNoOfTabs = noOfTabs;
 			declaration();
@@ -1849,7 +1812,6 @@ public:
 		else {
 			abort("Invalid statement at " + currToken);
 		}
-		noOfTabs--;
 	}
 	void tabs(string str) {
 		for (int i = 0; i < prevNoOfTabs; i++)
