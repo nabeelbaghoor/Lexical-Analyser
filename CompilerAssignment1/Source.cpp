@@ -1,4 +1,4 @@
-//#include "pch.h"
+#include "pch.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -572,9 +572,8 @@ public:
 			case 2:
 				if (str[ptr + step] == ' ' || str[ptr + step] == '(')
 				{
-					int code = getCode("CS");
-					int code2 = getCode("IF");
-					addTokenPair(code, code2);
+					int code = getCode("IF");
+					addTokenPair(code, '^');
 					ans = true;
 				}
 				flag = true;
@@ -603,15 +602,13 @@ public:
 				step++;
 				break;
 			case 6:
-				if (str[ptr + step] == ' ')
+				if (str[ptr + step] == ' ' || str[ptr + step] == ':')
 				{
-					int code = getCode("CS");
-					int code2 = getCode("ELSE");
-					addTokenPair(code, code2);
+					int code = getCode("ELSE");
+					addTokenPair(code, '^');
 					ans = true;
 				}
 				flag = true;
-				step++;
 				break;
 			case 7:
 				if (str[ptr + step] == 'f' || str[ptr + step] == 'F')
@@ -623,9 +620,8 @@ public:
 			case 8:
 				if (str[ptr + step] == ' ' || str[ptr + step] == '(')
 				{
-					int code = getCode("CS");
-					int code2 = getCode("ELIF");
-					addTokenPair(code, code2);
+					int code = getCode("ELIF");
+					addTokenPair(code, '^');
 					ans = true;
 				}
 				flag = true;
@@ -1029,8 +1025,8 @@ public:
 
 	void initialise()
 	{
-		string keyWords[] = { "INT", "CHAR", "COMMENT", "ID", "NUM", "LIT", "STR", "CS", "IF", "ELSE", "ELIF", "WHILE", "INPUT", "PRINT", "PRINT", "PRINTLN", "RO", "<=", ">=", "==", "!=", "->", "++" };
-		for (int i = 0; i < 23; i++)
+		string keyWords[] = { "INT", "CHAR", "COMMENT", "ID", "NUM", "LIT", "STR", "IF", "ELSE", "ELIF", "WHILE", "INPUT", "PRINT", "PRINT", "PRINTLN", "RO", "<=", ">=", "==", "!=", "->", "++" };
+		for (int i = 0; i < 22; i++)
 		{
 			pair<int, string> temp;
 			temp.first = 256 + i;
@@ -1109,7 +1105,14 @@ public:
 		tokenLexemeIt = tokenLexeme.begin();
 	}
 };
-
+//void parserTest()
+//{
+//	tokenLexemeIt = tokenLexeme.begin();
+//	string token = "";
+//	while ((token = getToken().first) != "") {
+//		cout << token<<endl;
+//	}
+//}
 class Parser {
 public:
 	Lexer* lexer;
@@ -1118,13 +1121,37 @@ public:
 	string peekToken;
 	string peekLexeme;
 	string symbolTableFilename;
+	string tacFileName;
 	list<pair<string, string>> symbolTable;
 	ofstream fout;
+	ofstream fout2;
+	int noOfTabs;
+	int prevNoOfTabs;
+	int tokenCount;
+	int lineNumber;
+	int jumpT;
+	int jumpF;
 
-	Parser(Lexer* _lexer, string _symbolTableFilename) {
+	Parser(Lexer* _lexer, string _symbolTableFilename, string _tacFileName) {
 		lexer = _lexer;
+		tokenCount = 0;
+		noOfTabs = 0;
+		prevNoOfTabs = 0;
+		lineNumber = 0;
+		jumpT = 0;
+		jumpF = 0;
 		symbolTableFilename = _symbolTableFilename;
+		tacFileName = _tacFileName;
 		fout.open(symbolTableFilename);
+		fout2.open(tacFileName);
+	}
+	string getNewToken() {
+		char buffer[10];
+		_itoa_s(tokenCount, buffer, 10);
+		tokenCount++;
+		string a = "t";
+		string b = buffer;
+		return a + b;
 	}
 	bool checkToken(string tok) {
 		return tok == currToken;
@@ -1167,24 +1194,36 @@ public:
 		statements();
 	}
 	void num() {
+		cout << endl;
+		noOfTabs++;
+		tabs("num");
 		if (checkToken("NUM")) {
+			string tokenName = getNewToken();
+			addToSymbolTable("INT", tokenName);
+			fout2 << tokenName;
 			match("NUM");
 		}
 		else if (checkToken("ID")) {
+			fout2 << currLexeme;
 			match("ID");
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void i2() {
+		cout << endl;
+		noOfTabs++;
+		tabs("i2");
 		if (checkToken(";")) {
 			match(";");
 		}
 		else if (checkToken(",")) {
 			match(",");
-			addToSymbolTable("INT",currLexeme);
+			addToSymbolTable("INT", currLexeme);
 			match("ID");
+			prevNoOfTabs = noOfTabs;
 			i2();
 		}
 		else if (checkToken("=")) {
@@ -1194,6 +1233,7 @@ public:
 				match(",");
 				addToSymbolTable("INT", currLexeme);
 				match("ID");
+				prevNoOfTabs = noOfTabs;
 				i2();
 			}
 			else if (checkToken(";")) {
@@ -1201,7 +1241,9 @@ public:
 			}
 			//double check it!
 			else if (checkToken("+") || checkToken("-") || checkToken("/") || checkToken("*")) {
+				prevNoOfTabs = noOfTabs;
 				E3();
+				prevNoOfTabs = noOfTabs;
 				i2();
 			}
 			else {
@@ -1211,22 +1253,34 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void j() {
+		cout << endl;
+		noOfTabs++;
+		tabs("j");
 		if (checkToken(",")) {
 			match(",");
+			prevNoOfTabs = noOfTabs;
 			num();
+			prevNoOfTabs = noOfTabs;
 			j();
 		}
+		noOfTabs--;
 	}
 	void i3() {
+		cout << endl;
+		noOfTabs++;
+		tabs("i3");
 		if (checkToken(";")) {
 			match(";");
 		}
 		else if (checkToken("=")) {
 			match("=");
 			match("{");
+			prevNoOfTabs = noOfTabs;
 			num();
+			prevNoOfTabs = noOfTabs;
 			j();
 			match("}");
 			match(";");
@@ -1234,40 +1288,67 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void i1() {
+		cout << endl;
+		noOfTabs++;
+		tabs("i1");
 		if (checkToken("{")) {
 			match("{");
+			prevNoOfTabs = noOfTabs;
 			num();
 			match("}");
+			prevNoOfTabs = noOfTabs;
 			i3();
 		}
 		else {
+			prevNoOfTabs = noOfTabs;
 			i2();
 		}
+		noOfTabs--;
 	}
 	void k() {
+		cout << endl;
+		noOfTabs++;
+		tabs("k");
 		if (checkToken(",")) {
 			match(",");
+			prevNoOfTabs = noOfTabs;
 			alphaNumber();
+			prevNoOfTabs = noOfTabs;
 			k();
 		}
+		noOfTabs--;
 	}
 	void alphaNumber() {
+		cout << endl;
+		noOfTabs++;
+		tabs("alphaNumber");
 		if (checkToken("LIT")) {
+			string tokenName = getNewToken();
+			addToSymbolTable("CHAR", tokenName);
+			fout2 << tokenName;
 			match("LIT");
 		}
 		else if (checkToken("ID")) {
+			fout << currLexeme;
 			match("ID");
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void c4() {
+		cout << endl;
+		noOfTabs++;
+		tabs("c4");
 		if (checkToken("{")) {
 			match("{");
+			prevNoOfTabs = noOfTabs;
 			alphaNumber();
+			prevNoOfTabs = noOfTabs;
 			k();
 			match("}");
 			match(";");
@@ -1279,34 +1360,46 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void c3() {
+		cout << endl;
+		noOfTabs++;
+		tabs("c3");
 		if (checkToken(";")) {
 			match(";");
 		}
 		else if (checkToken("=")) {
 			match("=");
+			prevNoOfTabs = noOfTabs;
 			c4();
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void c2() {
+		cout << endl;
+		noOfTabs++;
+		tabs("c2");
 		if (checkToken(";")) {
 			match(";");
 		}
 		else if (checkToken(",")) {
 			match(",");
 			match("ID");
+			prevNoOfTabs = noOfTabs;
 			c2();
 		}
 		else if (checkToken("=")) {
 			match("=");
+			prevNoOfTabs = noOfTabs;
 			alphaNumber();
 			if (checkToken(",")) {
 				match(",");
 				match("ID");
+				prevNoOfTabs = noOfTabs;
 				c2();
 			}
 			else if (checkToken(";")) {
@@ -1319,24 +1412,34 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void c1() {
+		cout << endl;
+		noOfTabs++;
+		tabs("c1");
 		if (checkToken("{")) {
 			match("{");
+			prevNoOfTabs = noOfTabs;
 			num();
 			match("}");
+			prevNoOfTabs = noOfTabs;
 			c3();
 		}
 		else {
+			prevNoOfTabs = noOfTabs;
 			c2();
 		}
+		noOfTabs--;
 	}
 	void declaration() {
+		cout << "Declaration" << endl;
 		if (checkToken("INT")) {
 			match("INT");
 			match(":");
 			addToSymbolTable("INT", currLexeme);
 			match("ID");
+			prevNoOfTabs = noOfTabs;
 			i1();
 		}
 		else if (checkToken("CHAR")) {
@@ -1344,6 +1447,7 @@ public:
 			match(":");
 			addToSymbolTable("CHAR", currLexeme);
 			match("ID");
+			prevNoOfTabs = noOfTabs;
 			c1();
 		}
 		else {
@@ -1352,69 +1456,105 @@ public:
 		cout << endl;
 	}
 	void R() {
+		cout << endl;
+		noOfTabs++;
+		tabs("R");
 		if (checkToken("LIT")) {
+			string tokenName = getNewToken();
+			addToSymbolTable("CHAR", tokenName);
+			fout2 << tokenName;
 			match("LIT");
 		}
 		else if (checkToken("NUM")) {
+			string tokenName = getNewToken();
+			addToSymbolTable("INT", tokenName);
+			fout2 << tokenName;
 			match("NUM");
 		}
 		else if (checkToken("ID")) {
+			fout2 << currLexeme;
 			match("ID");
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void E3() {
+		cout << endl;
+		noOfTabs++;
+		tabs("E3");
 		if (checkToken("+")) {
 			match("+");
+			prevNoOfTabs = noOfTabs;
 			R();
+			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("-")) {
 			match("-");
+			prevNoOfTabs = noOfTabs;
 			R();
+			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("/")) {
 			match("/");
+			prevNoOfTabs = noOfTabs;
 			R();
+			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("*")) {
 			match("*");
+			prevNoOfTabs = noOfTabs;
 			R();
+			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		//else {
 		//	abort("Bad token: " + currToken);
 		//}
+		noOfTabs--;
 	}
 	void E() {
+		cout << endl;
+		noOfTabs++;
+		tabs("E");
 		if (checkToken("LIT")) {
 			match("LIT");
+			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("NUM")) {
 			match("NUM");
+			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("ID")) {
 			match("ID");
+			prevNoOfTabs = noOfTabs;
 			B();
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void B() {
+		cout << endl;
+		noOfTabs++;
+		tabs("B");
 		if (checkToken("=")) {
 			match("=");
+			prevNoOfTabs = noOfTabs;
 			E();
 		}
 		else if (checkToken("+") || checkToken("-") || checkToken("*") || checkToken("/")) {
+			prevNoOfTabs = noOfTabs;
 			E3();
 		}
+		noOfTabs--;
 	}
 	/*void assignment() {
 		cout << "Assignment" << endl;
@@ -1439,9 +1579,11 @@ public:
 		cout << endl;
 	}*/
 	void assignment() {
-		if (checkToken("ID")){ 
+		cout << "Assignment" << endl;
+		if (checkToken("ID")) {
 			match("ID");
 			match("=");
+			prevNoOfTabs = noOfTabs;
 			E();
 			match(";");
 		}
@@ -1467,57 +1609,126 @@ public:
 		}
 	}*/
 	void conditionalStatement() {
+		cout << endl;
+		noOfTabs++;
+		tabs("conditionalStatement");
 		if (checkToken("LIT") || checkToken("NUM") || checkToken("ID")) {
+			prevNoOfTabs = noOfTabs;
+			jumpT = lineNumber + 1;
+			fout2 << "if ";
 			R();
+			fout2 << " " + currLexeme + " ";
 			match("RO");
+			prevNoOfTabs = noOfTabs;
 			R();
+			fout2 << " goto " << lineNumber + 3 << endl;
+			lineNumber++;
+			fout2 << "goto " << endl;
+			lineNumber++;
+			jumpF = lineNumber;
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void whileLoop() {
+		cout << "WhileLoop" << endl;
 		if (checkToken("WHILE")) {
 			match("WHILE");
 			conditionalStatement();
 			match(":");
 			match("{");
+			prevNoOfTabs = noOfTabs;
 			statements();
 			match("}");
+			fout2 << "goto " << jumpT << endl;
+			lineNumber++;
+			backPatch(jumpF, lineNumber + 1);
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		cout << endl;
 
 	}
+	void backPatch(int a, int n) {
+		fout2.close();
+		string tempData;
+		ifstream fin;
+		fin.open(tacFileName);
+
+		int i = 0;
+		while (!fin.eof()) {
+			string temp;
+			getline(fin, temp);
+			if (a == i + 1) {
+				char buffer[10];
+				_itoa_s(n, buffer, 10);
+				string b = buffer;
+				temp += b;
+			}
+			string b = "\n";
+			temp += b;
+			tempData += temp;
+			i++;
+		}
+		fin.close();
+
+		fout2.open(tacFileName);
+		string temp = "\n";
+		tempData.pop_back();
+		fout2 << tempData;
+	}
 	void A() {
+		cout << endl;
+		noOfTabs++;
+		tabs("A");
 		if (checkToken("ELIF")) {
 			match("ELIF");
+			prevNoOfTabs = noOfTabs;
 			conditionalStatement();
 			match(":");
 			match("{");
+			prevNoOfTabs = noOfTabs;
 			statements();
 			match("}");
+			int myLine = lineNumber + 1;
+			fout2 << "goto " << endl;
+			lineNumber++;
+			backPatch(jumpF, lineNumber + 1);
+			prevNoOfTabs = noOfTabs;
 			A();
+			backPatch(myLine, lineNumber + 1);
 		}
 		else if (checkToken("ELSE")) {
 			match("ELSE");
 			match(":");
 			match("{");
+			prevNoOfTabs = noOfTabs;
 			statements();
 			match("}");
 		}
+		noOfTabs--;
 	}
 	void IfStatements() {
 		cout << "If" << endl;
 		if (checkToken("IF")) {
 			match("IF");
+			prevNoOfTabs = noOfTabs;
 			conditionalStatement();
 			match(":");
 			match("{");
+			prevNoOfTabs = noOfTabs;
 			statements();
 			match("}");
+			int myLine = lineNumber + 1;
+			fout2 << "goto " << endl;
+			lineNumber++;
+			backPatch(jumpF, lineNumber + 1);
+			prevNoOfTabs = noOfTabs;
 			A();
+			backPatch(myLine, lineNumber + 1);
 		}
 		else {
 			abort("Bad token: " + currToken);
@@ -1525,16 +1736,29 @@ public:
 		cout << endl;
 	}
 	void s() {
+		cout << endl;
+		noOfTabs++;
+		tabs("s");
 		if (checkToken("STR")) {
+			string tokenName = getNewToken();
+			addToSymbolTable("CHAR[]", tokenName);
+			fout2 << tokenName;
+			//Initialise this value in memory later
 			match("STR");
 		}
 		else {
+			prevNoOfTabs = noOfTabs;
 			R();
 		}
+		noOfTabs--;
 	}
 	void p() {
+		cout << endl;
+		noOfTabs++;
+		tabs("p");
 		if (checkToken("(")) {
 			match("(");
+			prevNoOfTabs = noOfTabs;
 			s();
 			match(")");
 			match(";");
@@ -1542,42 +1766,64 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
+		noOfTabs--;
 	}
 	void prints() {
+		cout << "Print" << endl;
 		if (checkToken("PRINT")) {
 			match("PRINT");
+			prevNoOfTabs = noOfTabs;
+			fout2 << "OUT ";
 			p();
+			fout2 << endl;
+			lineNumber++;
 		}
 		else if (checkToken("PRINTLN")) {
 			match("PRINTLN");
+			prevNoOfTabs = noOfTabs;
+			fout2 << "OUT ";
 			p();
+			fout2 << "\\n" << endl;
+			lineNumber++;
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		cout << endl;
+
 	}
 	void input() {
+		cout << "Input" << endl;
 		if (checkToken("INPUT")) {
 			match("INPUT");
 			match("->");
+			fout2 << "IN " + currLexeme << endl;
+			lineNumber++;
 			match("ID");
 			match(";");
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		cout << endl;
 	}
 	void increment() {
+		cout << "Increment" << endl;
 		if (checkToken("ID")) {
+			fout2 << currLexeme;
 			match("ID");
 			match("++");
 			match(";");
+			fout2 << " ++" << endl;
+			lineNumber++;
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
+		cout << endl;
 	}
-	void comment(){
+	void comment() {
+		cout << "Comment" << endl;
 		if (checkToken("COMMENT")) {
 			match("COMMENT");
 		}
@@ -1588,60 +1834,88 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
+		cout << endl;
 	}
 	void u() {
 		//cout << "u" << endl;
 		if (checkToken("INT") || checkToken("CHAR") || (checkToken("ID") && checkPeek("++")) || checkToken("ID")
 			|| checkToken("WHILE") || checkToken("IF") || checkToken("PRINT") || checkToken("PRINTLN")
 			|| checkToken("INPUT") || checkToken("COMMENT") || checkToken("/")) {
+			prevNoOfTabs = noOfTabs;
 			statements();
 		}
 		//cout << endl;
 	}
 	void statements() {
+		cout << "Statements" << endl;
 		if (checkToken("INT") || checkToken("CHAR")) {
+			prevNoOfTabs = noOfTabs;
 			declaration();
+			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("ID") && checkPeek("++")) {
+			prevNoOfTabs = noOfTabs;
 			increment();
+			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("ID")) {
+			prevNoOfTabs = noOfTabs;
 			assignment();
+			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("WHILE")) {
+			prevNoOfTabs = noOfTabs;
 			whileLoop();
+			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("IF")) {
+			prevNoOfTabs = noOfTabs;
 			IfStatements();
+			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("PRINT") || checkToken("PRINTLN")) {
+			prevNoOfTabs = noOfTabs;
 			prints();
+			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("INPUT")) {
+			prevNoOfTabs = noOfTabs;
 			input();
+			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("COMMENT") || checkToken("/")) {
+			prevNoOfTabs = noOfTabs;
 			comment();
+			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else {
 			abort("Invalid statement at " + currToken);
 		}
+	}
+	void tabs(string str) {
+		for (int i = 0; i < prevNoOfTabs; i++)
+			cout << "\t";
+		cout << "|";
+
+		for (int i = 0; i < (noOfTabs - prevNoOfTabs + 2); i++)
+			cout << "__";
+		cout << str;
 	}
 };
 
@@ -1654,7 +1928,7 @@ int main()
 	{
 		//lexer.displayTokens();
 		lexer.GetReadyForParser();
-		Parser parser(&lexer, "symbolTable.txt");
+		Parser parser(&lexer, "symbolTable.txt", "TAC.txt");
 		parser.initialize();
 		parser.program();
 	}
