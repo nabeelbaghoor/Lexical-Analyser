@@ -1109,14 +1109,7 @@ public:
 		tokenLexemeIt = tokenLexeme.begin();
 	}
 };
-//void parserTest()
-//{
-//	tokenLexemeIt = tokenLexeme.begin();
-//	string token = "";
-//	while ((token = getToken().first) != "") {
-//		cout << token<<endl;
-//	}
-//}
+
 class Parser {
 public:
 	Lexer* lexer;
@@ -1127,13 +1120,9 @@ public:
 	string symbolTableFilename;
 	list<pair<string, string>> symbolTable;
 	ofstream fout;
-	int noOfTabs;
-	int prevNoOfTabs;
 
 	Parser(Lexer* _lexer, string _symbolTableFilename) {
 		lexer = _lexer;
-		noOfTabs = 0;
-		prevNoOfTabs = 0;
 		symbolTableFilename = _symbolTableFilename;
 		fout.open(symbolTableFilename);
 	}
@@ -1178,9 +1167,6 @@ public:
 		statements();
 	}
 	void num() {
-		cout << endl;
-		noOfTabs++;
-		tabs("num");
 		if (checkToken("NUM")) {
 			match("NUM");
 		}
@@ -1190,12 +1176,8 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void i2() {
-		cout << endl;
-		noOfTabs++;
-		tabs("i2");
 		if (checkToken(";")) {
 			match(";");
 		}
@@ -1203,7 +1185,6 @@ public:
 			match(",");
 			addToSymbolTable("INT",currLexeme);
 			match("ID");
-			prevNoOfTabs = noOfTabs;
 			i2();
 		}
 		else if (checkToken("=")) {
@@ -1213,7 +1194,6 @@ public:
 				match(",");
 				addToSymbolTable("INT", currLexeme);
 				match("ID");
-				prevNoOfTabs = noOfTabs;
 				i2();
 			}
 			else if (checkToken(";")) {
@@ -1221,9 +1201,7 @@ public:
 			}
 			//double check it!
 			else if (checkToken("+") || checkToken("-") || checkToken("/") || checkToken("*")) {
-				prevNoOfTabs = noOfTabs;
 				E3();
-				prevNoOfTabs = noOfTabs;
 				i2();
 			}
 			else {
@@ -1233,34 +1211,22 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void j() {
-		cout << endl;
-		noOfTabs++;
-		tabs("j");
 		if (checkToken(",")) {
 			match(",");
-			prevNoOfTabs = noOfTabs;
 			num();
-			prevNoOfTabs = noOfTabs;
 			j();
 		}
-		noOfTabs--;
 	}
 	void i3() {
-		cout << endl;
-		noOfTabs++;
-		tabs("i3");
 		if (checkToken(";")) {
 			match(";");
 		}
 		else if (checkToken("=")) {
 			match("=");
 			match("{");
-			prevNoOfTabs = noOfTabs;
 			num();
-			prevNoOfTabs = noOfTabs;
 			j();
 			match("}");
 			match(";");
@@ -1268,43 +1234,26 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void i1() {
-		cout << endl;
-		noOfTabs++;
-		tabs("i1");
 		if (checkToken("{")) {
 			match("{");
-			prevNoOfTabs = noOfTabs;
 			num();
 			match("}");
-			prevNoOfTabs = noOfTabs;
 			i3();
 		}
 		else {
-			prevNoOfTabs = noOfTabs;
 			i2();
 		}
-		noOfTabs--;
 	}
 	void k() {
-		cout << endl;
-		noOfTabs++;
-		tabs("k");
 		if (checkToken(",")) {
 			match(",");
-			prevNoOfTabs = noOfTabs;
 			alphaNumber();
-			prevNoOfTabs = noOfTabs;
 			k();
 		}
-		noOfTabs--;
 	}
 	void alphaNumber() {
-		cout << endl;
-		noOfTabs++;
-		tabs("alphaNumber");
 		if (checkToken("LIT")) {
 			match("LIT");
 		}
@@ -1314,17 +1263,11 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void c4() {
-		cout << endl;
-		noOfTabs++;
-		tabs("c4");
 		if (checkToken("{")) {
 			match("{");
-			prevNoOfTabs = noOfTabs;
 			alphaNumber();
-			prevNoOfTabs = noOfTabs;
 			k();
 			match("}");
 			match(";");
@@ -1336,46 +1279,34 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void c3() {
-		cout << endl;
-		noOfTabs++;
-		tabs("c3");
 		if (checkToken(";")) {
 			match(";");
 		}
 		else if (checkToken("=")) {
 			match("=");
-			prevNoOfTabs = noOfTabs;
 			c4();
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void c2() {
-		cout << endl;
-		noOfTabs++;
-		tabs("c2");
 		if (checkToken(";")) {
 			match(";");
 		}
 		else if (checkToken(",")) {
 			match(",");
 			match("ID");
-			prevNoOfTabs = noOfTabs;
 			c2();
 		}
 		else if (checkToken("=")) {
 			match("=");
-			prevNoOfTabs = noOfTabs;
 			alphaNumber();
 			if (checkToken(",")) {
 				match(",");
 				match("ID");
-				prevNoOfTabs = noOfTabs;
 				c2();
 			}
 			else if (checkToken(";")) {
@@ -1388,34 +1319,24 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void c1() {
-		cout << endl;
-		noOfTabs++;
-		tabs("c1");
 		if (checkToken("{")) {
 			match("{");
-			prevNoOfTabs = noOfTabs;
 			num();
 			match("}");
-			prevNoOfTabs = noOfTabs;
 			c3();
 		}
 		else {
-			prevNoOfTabs = noOfTabs;
 			c2();
 		}
-		noOfTabs--;
 	}
 	void declaration() {
-		cout << "Declaration"<<endl;
 		if (checkToken("INT")) {
 			match("INT");
 			match(":");
 			addToSymbolTable("INT", currLexeme);
 			match("ID");
-			prevNoOfTabs = noOfTabs;
 			i1();
 		}
 		else if (checkToken("CHAR")) {
@@ -1423,7 +1344,6 @@ public:
 			match(":");
 			addToSymbolTable("CHAR", currLexeme);
 			match("ID");
-			prevNoOfTabs = noOfTabs;
 			c1();
 		}
 		else {
@@ -1432,9 +1352,6 @@ public:
 		cout << endl;
 	}
 	void R() {
-		cout << endl;
-		noOfTabs++;
-		tabs("R");
 		if (checkToken("LIT")) {
 			match("LIT");
 		}
@@ -1447,83 +1364,57 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void E3() {
-		cout << endl;
-		noOfTabs++;
-		tabs("E3");
 		if (checkToken("+")) {
 			match("+");
-			prevNoOfTabs = noOfTabs;
 			R();
-			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("-")) {
 			match("-");
-			prevNoOfTabs = noOfTabs;
 			R();
-			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("/")) {
 			match("/");
-			prevNoOfTabs = noOfTabs;
 			R();
-			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("*")) {
 			match("*");
-			prevNoOfTabs = noOfTabs;
 			R();
-			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		//else {
 		//	abort("Bad token: " + currToken);
 		//}
-		noOfTabs--;
 	}
 	void E() {
-		cout << endl;
-		noOfTabs++;
-		tabs("E");
 		if (checkToken("LIT")) {
 			match("LIT");
-			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("NUM")) {
 			match("NUM");
-			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("ID")) {
 			match("ID");
-			prevNoOfTabs = noOfTabs;
 			B();
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void B() {
-		cout << endl;
-		noOfTabs++;
-		tabs("B");
 		if (checkToken("=")) {
 			match("=");
-			prevNoOfTabs = noOfTabs;
 			E();
 		}
 		else if (checkToken("+") || checkToken("-") || checkToken("*") || checkToken("/")) {
-			prevNoOfTabs = noOfTabs;
 			E3();
 		}
-		noOfTabs--;
 	}
 	/*void assignment() {
 		cout << "Assignment" << endl;
@@ -1548,11 +1439,9 @@ public:
 		cout << endl;
 	}*/
 	void assignment() {
-		cout << "Assignment" << endl;
 		if (checkToken("ID")){ 
 			match("ID");
 			match("=");
-			prevNoOfTabs = noOfTabs;
 			E();
 			match(";");
 		}
@@ -1578,76 +1467,56 @@ public:
 		}
 	}*/
 	void conditionalStatement() {
-		cout << endl;
-		noOfTabs++;
-		tabs("conditionalStatement");
 		if (checkToken("LIT") || checkToken("NUM") || checkToken("ID")) {
-			prevNoOfTabs = noOfTabs;
 			R();
 			match("RO");
-			prevNoOfTabs = noOfTabs;
 			R();
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void whileLoop() {
-		cout << "WhileLoop" << endl;
 		if (checkToken("WHILE")) {
 			match("WHILE");
 			conditionalStatement();
 			match(":");
 			match("{");
-			prevNoOfTabs = noOfTabs;
 			statements();
 			match("}");
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
-		cout << endl;
 
 	}
 	void A() {
-		cout << endl;
-		noOfTabs++;
-		tabs("A");
 		if (checkToken("ELIF")) {
 			match("ELIF");
-			prevNoOfTabs = noOfTabs;
 			conditionalStatement();
 			match(":");
 			match("{");
-			prevNoOfTabs = noOfTabs;
 			statements();
 			match("}");
-			prevNoOfTabs = noOfTabs;
 			A();
 		}
 		else if (checkToken("ELSE")) {
 			match("ELSE");
 			match(":");
 			match("{");
-			prevNoOfTabs = noOfTabs;
 			statements();
 			match("}");
 		}
-		noOfTabs--;
 	}
 	void IfStatements() {
 		cout << "If" << endl;
 		if (checkToken("IF")) {
 			match("IF");
-			prevNoOfTabs = noOfTabs;
 			conditionalStatement();
 			match(":");
 			match("{");
-			prevNoOfTabs = noOfTabs;
 			statements();
 			match("}");
-			prevNoOfTabs = noOfTabs;
 			A();
 		}
 		else {
@@ -1656,25 +1525,16 @@ public:
 		cout << endl;
 	}
 	void s() {
-		cout << endl;
-		noOfTabs++;
-		tabs("s");
 		if (checkToken("STR")) {
 			match("STR");
 		}
 		else {
-			prevNoOfTabs = noOfTabs;
 			R();
 		}
-		noOfTabs--;
 	}
 	void p() {
-		cout << endl;
-		noOfTabs++;
-		tabs("p");
 		if (checkToken("(")) {
 			match("(");
-			prevNoOfTabs = noOfTabs;
 			s();
 			match(")");
 			match(";");
@@ -1682,28 +1542,21 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		noOfTabs--;
 	}
 	void prints() {
-		cout << "Print" << endl;
 		if (checkToken("PRINT")) {
 			match("PRINT");
-			prevNoOfTabs = noOfTabs;
 			p();
 		}
 		else if (checkToken("PRINTLN")) {
 			match("PRINTLN");
-			prevNoOfTabs = noOfTabs;
 			p();
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
-		cout << endl;
-
 	}
 	void input() {
-		cout << "Input" << endl;
 		if (checkToken("INPUT")) {
 			match("INPUT");
 			match("->");
@@ -1713,10 +1566,8 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		cout << endl;
 	}
 	void increment() {
-		cout << "Increment" << endl;
 		if (checkToken("ID")) {
 			match("ID");
 			match("++");
@@ -1725,10 +1576,8 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		cout << endl;
 	}
 	void comment(){
-		cout << "Comment" << endl;
 		if (checkToken("COMMENT")) {
 			match("COMMENT");
 		}
@@ -1739,88 +1588,60 @@ public:
 		else {
 			abort("Bad token: " + currToken);
 		}
-		cout << endl;
 	}
 	void u() {
 		//cout << "u" << endl;
 		if (checkToken("INT") || checkToken("CHAR") || (checkToken("ID") && checkPeek("++")) || checkToken("ID")
 			|| checkToken("WHILE") || checkToken("IF") || checkToken("PRINT") || checkToken("PRINTLN")
 			|| checkToken("INPUT") || checkToken("COMMENT") || checkToken("/")) {
-			prevNoOfTabs = noOfTabs;
 			statements();
 		}
 		//cout << endl;
 	}
 	void statements() {
-		cout<<"statements"<<endl;
 		if (checkToken("INT") || checkToken("CHAR")) {
-			prevNoOfTabs = noOfTabs;
 			declaration();
-			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("ID") && checkPeek("++")) {
-			prevNoOfTabs = noOfTabs;
 			increment();
-			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("ID")) {
-			prevNoOfTabs = noOfTabs;
 			assignment();
-			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("WHILE")) {
-			prevNoOfTabs = noOfTabs;
 			whileLoop();
-			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("IF")) {
-			prevNoOfTabs = noOfTabs;
 			IfStatements();
-			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("PRINT") || checkToken("PRINTLN")) {
-			prevNoOfTabs = noOfTabs; 
 			prints();
-			prevNoOfTabs = noOfTabs; 
 			u();
 			//nextToken();
 		}
 		else if (checkToken("INPUT")) {
-			prevNoOfTabs = noOfTabs; 
 			input();
-			prevNoOfTabs = noOfTabs;
 			u();
 			//nextToken();
 		}
 		else if (checkToken("COMMENT") || checkToken("/")) {
-			prevNoOfTabs = noOfTabs; 
 			comment();
-			prevNoOfTabs = noOfTabs; 
 			u();
 			//nextToken();
 		}
 		else {
 			abort("Invalid statement at " + currToken);
 		}
-	}
-	void tabs(string str) {
-		for (int i = 0; i < prevNoOfTabs; i++)
-			cout << "\t";
-		cout << "|";
-
-		for(int i =0;i< (noOfTabs - prevNoOfTabs + 2);i++)
-			cout << "__";
-		cout << str;
 	}
 };
 
