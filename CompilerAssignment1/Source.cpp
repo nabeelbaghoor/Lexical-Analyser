@@ -1114,6 +1114,7 @@ public:
 //	}
 //}
 class Parser {
+	//Modify symbol table for char array
 public:
 	Lexer* lexer;
 	string currToken;
@@ -1162,7 +1163,7 @@ public:
 		temp.first = type;
 		temp.second = symbol;
 		symbolTable.push_back(temp);
-		fout << "('" << type << "', '" << symbol << "')" << endl;
+		//		fout << "('" << type << "', '" << symbol << "')" << endl;
 	}
 	void initialize() {
 		//Call this twice to initialize current and peek
@@ -1228,7 +1229,20 @@ public:
 		}
 		else if (checkToken("=")) {
 			match("=");
-			num();
+			if (!checkPeek("+") && !checkPeek("-") && !checkPeek("/") && !checkPeek("*")) {
+				fout2 << symbolTable.back().second << " = ";
+				num();
+				fout2 << endl;
+				lineNumber++;
+			}
+			else {
+				num();
+				prevNoOfTabs = noOfTabs;
+				E3();
+				prevNoOfTabs = noOfTabs;
+				i2();
+				return;
+			}
 			if (checkToken(",")) {
 				match(",");
 				addToSymbolTable("INT", currLexeme);
@@ -1240,12 +1254,12 @@ public:
 				match(";");
 			}
 			//double check it!
-			else if (checkToken("+") || checkToken("-") || checkToken("/") || checkToken("*")) {
-				prevNoOfTabs = noOfTabs;
-				E3();
-				prevNoOfTabs = noOfTabs;
-				i2();
-			}
+			//else if (checkToken("+") || checkToken("-") || checkToken("/") || checkToken("*")) {
+			//	prevNoOfTabs = noOfTabs;
+			//	E3();
+			//	prevNoOfTabs = noOfTabs;
+			//	i2();
+			//}
 			else {
 				abort("Bad token: " + currToken);
 			}
@@ -1261,6 +1275,7 @@ public:
 		tabs("j");
 		if (checkToken(",")) {
 			match(",");
+			fout2 << ", ";
 			prevNoOfTabs = noOfTabs;
 			num();
 			prevNoOfTabs = noOfTabs;
@@ -1274,15 +1289,18 @@ public:
 		tabs("i3");
 		if (checkToken(";")) {
 			match(";");
+			fout2 << "{0}";
 		}
 		else if (checkToken("=")) {
 			match("=");
 			match("{");
+			fout2 << "{";
 			prevNoOfTabs = noOfTabs;
 			num();
 			prevNoOfTabs = noOfTabs;
 			j();
 			match("}");
+			fout2 << "}";
 			match(";");
 		}
 		else {
@@ -1294,13 +1312,17 @@ public:
 		cout << endl;
 		noOfTabs++;
 		tabs("i1");
-		if (checkToken("{")) {
-			match("{");
+		if (checkToken("[")) {
+			match("[");
 			prevNoOfTabs = noOfTabs;
+			fout2 << symbolTable.back().second << "[";
 			num();
-			match("}");
+			match("]");
+			fout2 << "] = ";
 			prevNoOfTabs = noOfTabs;
 			i3();
+			fout2 << endl;
+			lineNumber++;
 		}
 		else {
 			prevNoOfTabs = noOfTabs;
@@ -1314,6 +1336,7 @@ public:
 		tabs("k");
 		if (checkToken(",")) {
 			match(",");
+			fout2 << ", ";
 			prevNoOfTabs = noOfTabs;
 			alphaNumber();
 			prevNoOfTabs = noOfTabs;
@@ -1347,14 +1370,19 @@ public:
 		if (checkToken("{")) {
 			match("{");
 			prevNoOfTabs = noOfTabs;
+			fout2 << " = {";
 			alphaNumber();
 			prevNoOfTabs = noOfTabs;
 			k();
 			match("}");
+			fout2 << "}";
 			match(";");
 		}
 		else if (checkToken("STR")) {
 			match("STR");
+			string tokenName = getNewToken();
+			addToSymbolTable("CHAR[]", tokenName);
+			fout2 << " = " << tokenName;
 			match(";");
 		}
 		else {
@@ -1366,6 +1394,7 @@ public:
 		cout << endl;
 		noOfTabs++;
 		tabs("c3");
+		symbolTable.back().first = "CHAR[]";
 		if (checkToken(";")) {
 			match(";");
 		}
@@ -1388,14 +1417,18 @@ public:
 		}
 		else if (checkToken(",")) {
 			match(",");
+			addToSymbolTable("CHAR", currLexeme);
 			match("ID");
 			prevNoOfTabs = noOfTabs;
 			c2();
 		}
 		else if (checkToken("=")) {
 			match("=");
+			fout2 << symbolTable.back().second << " = ";
 			prevNoOfTabs = noOfTabs;
 			alphaNumber();
+			fout2 << endl;
+			lineNumber++;
 			if (checkToken(",")) {
 				match(",");
 				match("ID");
@@ -1418,13 +1451,17 @@ public:
 		cout << endl;
 		noOfTabs++;
 		tabs("c1");
-		if (checkToken("{")) {
-			match("{");
+		if (checkToken("[")) {
+			match("[");
+			fout2 << symbolTable.back().second << "[";
 			prevNoOfTabs = noOfTabs;
 			num();
-			match("}");
+			match("]");
+			fout2 << "]";
 			prevNoOfTabs = noOfTabs;
 			c3();
+			fout2 << endl;
+			lineNumber++;
 		}
 		else {
 			prevNoOfTabs = noOfTabs;
@@ -1480,6 +1517,31 @@ public:
 		}
 		noOfTabs--;
 	}
+	void R2() {
+		cout << endl;
+		noOfTabs++;
+		tabs("R");
+		if (checkToken("LIT")) {
+			//string tokenName = getNewToken();
+			//addToSymbolTable("CHAR", tokenName);
+			//fout2 << tokenName;
+			match("LIT");
+		}
+		else if (checkToken("NUM")) {
+			//string tokenName = getNewToken();
+			//addToSymbolTable("INT", tokenName);
+			//fout2 << tokenName;
+			match("NUM");
+		}
+		else if (checkToken("ID")) {
+			//fout2 << currLexeme;
+			match("ID");
+		}
+		else {
+			abort("Bad token: " + currToken);
+		}
+		noOfTabs--;
+	}
 	void E3() {
 		cout << endl;
 		noOfTabs++;
@@ -1487,28 +1549,28 @@ public:
 		if (checkToken("+")) {
 			match("+");
 			prevNoOfTabs = noOfTabs;
-			R();
+			R2();
 			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("-")) {
 			match("-");
 			prevNoOfTabs = noOfTabs;
-			R();
+			R2();
 			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("/")) {
 			match("/");
 			prevNoOfTabs = noOfTabs;
-			R();
+			R2();
 			prevNoOfTabs = noOfTabs;
 			E3();
 		}
 		else if (checkToken("*")) {
 			match("*");
 			prevNoOfTabs = noOfTabs;
-			R();
+			R2();
 			prevNoOfTabs = noOfTabs;
 			E3();
 		}
@@ -1517,7 +1579,7 @@ public:
 		//}
 		noOfTabs--;
 	}
-	void E() {
+	string E() {
 		cout << endl;
 		noOfTabs++;
 		tabs("E");
@@ -1532,16 +1594,20 @@ public:
 			E3();
 		}
 		else if (checkToken("ID")) {
+			string myName = currLexeme;
 			match("ID");
 			prevNoOfTabs = noOfTabs;
-			B();
+			string val = B();
+			fout2 << myName << " = " << val << endl;
+			lineNumber++;
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
 		noOfTabs--;
+		return "temp";
 	}
-	void B() {
+	string B() {
 		cout << endl;
 		noOfTabs++;
 		tabs("B");
@@ -1555,6 +1621,7 @@ public:
 			E3();
 		}
 		noOfTabs--;
+		return "temp2";
 	}
 	/*void assignment() {
 		cout << "Assignment" << endl;
@@ -1581,10 +1648,13 @@ public:
 	void assignment() {
 		cout << "Assignment" << endl;
 		if (checkToken("ID")) {
+			string myName = currLexeme;
 			match("ID");
 			match("=");
 			prevNoOfTabs = noOfTabs;
-			E();
+			string val = E();
+			fout2 << myName << " = " << val << endl;
+			lineNumber++;
 			match(";");
 		}
 		else {
