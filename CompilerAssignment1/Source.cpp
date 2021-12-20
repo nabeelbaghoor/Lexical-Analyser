@@ -1126,21 +1126,19 @@ public:
 	list<pair<string, string>> symbolTable;
 	ofstream fout;
 	ofstream fout2;
+	int currentAddress;
 	int noOfTabs;
 	int prevNoOfTabs;
 	int tokenCount;
 	int lineNumber;
-	int jumpT;
-	int jumpF;
 
 	Parser(Lexer* _lexer, string _symbolTableFilename, string _tacFileName) {
 		lexer = _lexer;
 		tokenCount = 0;
+		currentAddress = 0;
 		noOfTabs = 0;
 		prevNoOfTabs = 0;
 		lineNumber = 0;
-		jumpT = 0;
-		jumpF = 0;
 		symbolTableFilename = _symbolTableFilename;
 		tacFileName = _tacFileName;
 		fout.open(symbolTableFilename);
@@ -1157,13 +1155,22 @@ public:
 	bool checkToken(string tok) {
 		return tok == currToken;
 	}
-	void addToSymbolTable(string type, string symbol)
+	void addToSymbolTable(string type, string symbol, int _size = 0)
 	{
 		pair<string, string> temp;
 		temp.first = type;
 		temp.second = symbol;
 		symbolTable.push_back(temp);
-		fout << "('" << type << "', '" << symbol << "')" << endl;
+		int size = 0;
+		if (_size != 0)
+			size = _size;
+		else if (type._Equal("INT"))
+			size = 4;
+		else
+			size = 1;
+
+		fout << "('" << type << "', '" << symbol << ", " << currentAddress << "')" << endl;
+		currentAddress += size;
 	}
 	void initialize() {
 		//Call this twice to initialize current and peek
@@ -1380,9 +1387,10 @@ public:
 			match(";");
 		}
 		else if (checkToken("STR")) {
+			int size = currLexeme.size();
 			match("STR");
 			string tokenName = getNewToken();
-			addToSymbolTable("CHAR[]", tokenName);
+			addToSymbolTable("CHAR[]", tokenName, size);
 			fout2 << " = " << tokenName << endl;
 			lineNumber++;
 			match(";");
@@ -1778,13 +1786,14 @@ public:
 			abort("Bad token: " + currToken);
 		}
 	}*/
-	void conditionalStatement() {
+	pair<int, int> conditionalStatement() {
+		pair <int, int> ret;
 		cout << endl;
 		noOfTabs++;
 		tabs("conditionalStatement");
 		if (checkToken("LIT") || checkToken("NUM") || checkToken("ID")) {
 			prevNoOfTabs = noOfTabs;
-			jumpT = lineNumber + 1;
+			ret.first = lineNumber + 1;
 			fout2 << "if ";
 			R();
 			fout2 << " " + currLexeme + " ";
@@ -1795,26 +1804,27 @@ public:
 			lineNumber++;
 			fout2 << "goto " << endl;
 			lineNumber++;
-			jumpF = lineNumber;
+			ret.second = lineNumber;
 		}
 		else {
 			abort("Bad token: " + currToken);
 		}
 		noOfTabs--;
+		return ret;
 	}
 	void whileLoop() {
 		cout << "WhileLoop" << endl;
 		if (checkToken("WHILE")) {
 			match("WHILE");
-			conditionalStatement();
+			pair<int, int> temp = conditionalStatement();
 			match(":");
 			match("{");
 			prevNoOfTabs = noOfTabs;
 			statements();
 			match("}");
-			fout2 << "goto " << jumpT << endl;
+			fout2 << "goto " << temp.first << endl;
 			lineNumber++;
-			backPatch(jumpF, lineNumber + 1);
+			backPatch(temp.second, lineNumber + 1);
 		}
 		else {
 			abort("Bad token: " + currToken);
@@ -1857,7 +1867,7 @@ public:
 		if (checkToken("ELIF")) {
 			match("ELIF");
 			prevNoOfTabs = noOfTabs;
-			conditionalStatement();
+			pair<int, int> temp = conditionalStatement();
 			match(":");
 			match("{");
 			prevNoOfTabs = noOfTabs;
@@ -1866,7 +1876,7 @@ public:
 			int myLine = lineNumber + 1;
 			fout2 << "goto " << endl;
 			lineNumber++;
-			backPatch(jumpF, lineNumber + 1);
+			backPatch(temp.second, lineNumber + 1);
 			prevNoOfTabs = noOfTabs;
 			A();
 			backPatch(myLine, lineNumber + 1);
@@ -1886,7 +1896,7 @@ public:
 		if (checkToken("IF")) {
 			match("IF");
 			prevNoOfTabs = noOfTabs;
-			conditionalStatement();
+			pair<int, int> temp = conditionalStatement();
 			match(":");
 			match("{");
 			prevNoOfTabs = noOfTabs;
@@ -1895,7 +1905,7 @@ public:
 			int myLine = lineNumber + 1;
 			fout2 << "goto " << endl;
 			lineNumber++;
-			backPatch(jumpF, lineNumber + 1);
+			backPatch(temp.second, lineNumber + 1);
 			prevNoOfTabs = noOfTabs;
 			A();
 			backPatch(myLine, lineNumber + 1);
@@ -1910,8 +1920,9 @@ public:
 		noOfTabs++;
 		tabs("s");
 		if (checkToken("STR")) {
+			int size = currLexeme.size();
 			string tokenName = getNewToken();
-			addToSymbolTable("CHAR[]", tokenName);
+			addToSymbolTable("CHAR[]", tokenName, size);
 			fout2 << tokenName;
 			//Initialise this value in memory later
 			match("STR");

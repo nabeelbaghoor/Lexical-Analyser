@@ -8,6 +8,7 @@ print(my_char);
 The program here onwards is an iterative algorithm
 for fibonacci numbers
 */
+
 print("enter a number");
 input -> num;
 int: a=0, b=1, c=0;
@@ -17,16 +18,22 @@ print(b);
 
 while c < num:
 {
+if a > b:
+{
 int: temp = a + b;
 a = b;
 b = temp;
+}
 print(temp);
 c++;
 }
 println(temp);
 if c < num:
 {
+if a > b:
+{
 println(temp);
+}
 println(temp);
 }
 elif c > num:
@@ -44,5 +51,6 @@ else:
 println(b);
 println(b);	
 }
+
 int : p1 = a + b / c * g - d * e + f;
 p1 = a = b / c * g - d * e + f;
