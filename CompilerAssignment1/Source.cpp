@@ -1166,11 +1166,10 @@ public:
 		opCodeTable["goto"] = 10;
 		opCodeTable["INI"] = 11;
 		opCodeTable["INC"] = 12;
-		opCodeTable["INS"] = 13;
-		opCodeTable["OUTI"] = 14;
-		opCodeTable["OUTC"] = 15;
-		opCodeTable["OUTS"] = 16;
-		opCodeTable["="] = 17;
+		opCodeTable["OUTI"] = 13;
+		opCodeTable["OUTC"] = 14;
+		opCodeTable["OUTS"] = 15;
+		opCodeTable["="] = 16;
 	}
 	string getNewToken() {
 		char buffer[10];
@@ -2163,20 +2162,20 @@ public:
 	MachineCodeGenerator(Parser* _parser, string _TACFilename, string _machineCodeFilename) {
 		parser = _parser;
 		TACFilename = _TACFilename;
-		machineCodeFilename = _machineCodeFilename;
-		lineNo = 1;
+machineCodeFilename = _machineCodeFilename;
+lineNo = 1;
 
-		//get no of lines in TAC
-		fin.open(TACFilename);
-		int lines = 0; string line;
-		while (getline(fin, line))
-			lines++;
-		totalLines = lines;
-		mem = new int*[lines + 1];
-		fin.close();
+//get no of lines in TAC
+fin.open(TACFilename);
+int lines = 0; string line;
+while (getline(fin, line))
+lines++;
+totalLines = lines;
+mem = new int* [lines + 1];
+fin.close();
 
-		fin.open(TACFilename);
-		fout.open(machineCodeFilename);
+fin.open(TACFilename);
+fout.open(machineCodeFilename);
 	}
 	void abort(string message = "") {
 		cout << "Error: " + message << endl;
@@ -2242,17 +2241,35 @@ public:
 	}
 	bool isOutput(vector<string>tokens) {
 		if (tokens.size() == 2 && tokens[0] == "OUT") {
-			
-			if (hasEnding(tokens[1],"n")) {
+
+			if (hasEnding(tokens[1], "n")) {
 				vector<int>data;
-				data.push_back(parser->opCodeTable["OUTLN"]);
+				if (parser->symbolTable[tokens[1].substr(0, tokens[1].length() - 2)].first == "INT") {
+					data.push_back(parser->opCodeTable["OUTI"]);
+				}
+				else if (parser->symbolTable[tokens[1].substr(0, tokens[1].length() - 2)].first == "CHAR") {
+					data.push_back(parser->opCodeTable["OUTC"]);
+				}
+				else if (parser->symbolTable[tokens[1].substr(0, tokens[1].length() - 2)].first == "CHAR[]") {
+					data.push_back(parser->opCodeTable["OUTS"]);
+				}
 				data.push_back(atoi(getSymbolAdress(tokens[1].substr(0, tokens[1].length() - 2))));
+				data.push_back(1);
 				addToMemArrayAndFile(data);
 			}
 			else {
 				vector<int>data;
-				data.push_back(parser->opCodeTable["OUT"]);
+				if (parser->symbolTable[tokens[1].substr(0, tokens[1].length() - 2)].first == "INT") {
+					data.push_back(parser->opCodeTable["OUTI"]);
+				}
+				else if (parser->symbolTable[tokens[1].substr(0, tokens[1].length() - 2)].first == "CHAR") {
+					data.push_back(parser->opCodeTable["OUTC"]);
+				}
+				else if (parser->symbolTable[tokens[1].substr(0, tokens[1].length() - 2)].first == "CHAR[]") {
+					data.push_back(parser->opCodeTable["OUTS"]);
+				}
 				data.push_back(atoi(getSymbolAdress(tokens[1])));
+				data.push_back(0);
 				addToMemArrayAndFile(data);
 			}
 		}
@@ -2261,7 +2278,12 @@ public:
 	bool isInput(vector<string>tokens) {
 		if (tokens.size() == 2 && tokens[0] == "IN") {
 			vector<int>data;
-			data.push_back(parser->opCodeTable["IN"]);
+			if (parser->symbolTable[tokens[1]].first == "INT"){
+				data.push_back(parser->opCodeTable["INI"]);
+			}
+			else if (parser->symbolTable[tokens[1]].first == "CHAR") {
+				data.push_back(parser->opCodeTable["INC"]);
+			}
 			data.push_back(atoi(getSymbolAdress(tokens[1])));
 			addToMemArrayAndFile(data);
 		}
@@ -2339,27 +2361,6 @@ public:
 		machineCodeGnerator = _machineCodeGnerator;
 		bytes = new unsigned char[machineCodeGnerator->parser->currentAddress+4];
 	}
-	void initializeBytes() {
-	}
-	/*int readInt(int address) {
-
-	}
-	char readChar(int address) {
-
-	}
-	char* readArr(int address) {
-
-	}
-	void saveInt(int address,int i) {
-
-	}
-	void saveArr(int address,char *ch) {
-
-	}
-	void saveChar(int address,char ch) {
-
-	}*/
-
 	char readChar(int address) {
 		char ans = (char)bytes[address];
 		return ans;
@@ -2453,49 +2454,35 @@ public:
 			case 10://goto
 				lineNo = mem[lineNo][1];
 				break;
-			case 11://IN
-				if (true) {
-					int input;
-					cin >> input;
-					saveInt(mem[lineNo][1], input);
-				}
-				else if (true) {
-					char input;
-					cin >> input;
-					saveChar(mem[lineNo][1], input);
-				}
-				//else if (true) {
-				//	char* input;
-				//	cin >> input;
-				//	//saveArr(mem[lineNo][1],input);
-				//}
-				
+			case 11://INI
+				int inpi;
+				cin >> inpi;
+				saveInt(mem[lineNo][1], inpi);
 				break;
-			case 12://OUT
-				if (true) {
-					cout<<readInt(mem[lineNo][1]);
-				}
-				else if (true) {
-					cout<<readChar(mem[lineNo][1]);
-				}
-				else if (true) {
-					cout << readArr(mem[lineNo][1]);
+			case 12://INC
+				char inpc;
+				cin >> inpc;
+				saveChar(mem[lineNo][1], inpc);
+				break;
+			case 13://OUTI
+				cout<<readInt(mem[lineNo][1]);
+				if (readInt(mem[lineNo][2])) {
+					cout << endl;
 				}
 				break;
-			case 13://OUTLN
-				if (true) {
-					cout << readInt(mem[lineNo][1])<<endl;
-				}
-				else if (true) {
-					cout << readChar(mem[lineNo][1])<<endl;
-				}
-				else if (true) {
-					cout << readArr(mem[lineNo][1]);
+			case 14://OUTC
+				cout<<readChar(mem[lineNo][1]);
+				if (readInt(mem[lineNo][2])) {
+					cout << endl;
 				}
 				break;
-			case 14://if
+			case 15://OUTS
+				cout << readArr(mem[lineNo][1]);
+				if (readInt(mem[lineNo][2])) {
+					cout << endl;
+				}
 				break;
-			case 15://=
+			case 16://=
 				saveInt(mem[lineNo][2],
 					readInt(mem[lineNo][1]));
 				break;
@@ -2524,7 +2511,6 @@ int main()
 		machineCodeGnerator.convertTACtoMachineCode();
 
 		VM  vm(&machineCodeGnerator);
-		vm.initializeBytes();
 		vm.run();
 	}
 }
