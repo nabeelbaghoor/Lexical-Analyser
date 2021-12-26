@@ -2505,7 +2505,7 @@ int main()
 		Parser parser(&lexer, "symbolTable.txt", "TAC.txt");
 		parser.initialize();
 		parser.program();
-		//parser.printSymbolTable();
+		//parser.printSymbolT able();
 
 		MachineCodeGenerator machineCodeGnerator(&parser, "TAC.txt", "MCG.txt");
 		machineCodeGnerator.convertTACtoMachineCode();
