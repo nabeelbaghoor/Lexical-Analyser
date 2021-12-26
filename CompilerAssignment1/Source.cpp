@@ -1,4 +1,4 @@
-#include "pch.h"
+//#include "pch.h"
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -7,6 +7,7 @@
 #include <list>
 #include <iterator>
 #include <cstring>
+#include <unordered_map>
 using namespace std;
 
 
@@ -1123,7 +1124,9 @@ public:
 	string peekLexeme;
 	string symbolTableFilename;
 	string tacFileName;
-	list<pair<string, string>> symbolTable;
+	unordered_map<string, pair<string, string>> symbolTable;
+	unordered_map<string, int> opCodeTable;
+	//list<pair<string, pair<string, string>>> symbolTable;
 	ofstream fout;
 	ofstream fout2;
 	int currentAddress;
@@ -1131,6 +1134,7 @@ public:
 	int prevNoOfTabs;
 	int tokenCount;
 	int lineNumber;
+	string lastSymbolNameInSymbolTable;
 
 	Parser(Lexer* _lexer, string _symbolTableFilename, string _tacFileName) {
 		lexer = _lexer;
@@ -1157,10 +1161,18 @@ public:
 	}
 	void addToSymbolTable(string type, string symbol, int _size = 0)
 	{
+		/*pair<string, pair<string, string>> temp;
+		temp.first = type;
+		temp.second.first = symbol;
+		temp.second.second = to_string(currentAddress);
+		symbolTable.push_back(temp);*/
+
 		pair<string, string> temp;
 		temp.first = type;
-		temp.second = symbol;
-		symbolTable.push_back(temp);
+		temp.second = to_string(currentAddress);
+		symbolTable[symbol] = temp;
+
+		lastSymbolNameInSymbolTable = symbol;
 		int size = 0;
 		if (_size != 0)
 			size = _size;
@@ -1237,14 +1249,16 @@ public:
 		else if (checkToken("=")) {
 			match("=");
 			if (!checkPeek("+") && !checkPeek("-") && !checkPeek("/") && !checkPeek("*")) {
-				fout2 << symbolTable.back().second << " = ";
+				//fout2 << symbolTable.back().second.first << " = ";
+				fout2 << lastSymbolNameInSymbolTable << " = ";
 				num();
 				fout2 << endl;
 				lineNumber++;
 			}
 			else {
 				prevNoOfTabs = noOfTabs;
-				string myName = symbolTable.back().second;
+				//string myName = symbolTable.back().second.first;
+				string myName = lastSymbolNameInSymbolTable;
 				fout2 << myName << " = " << E() << endl;
 				lineNumber++;
 				prevNoOfTabs = noOfTabs;
@@ -1323,7 +1337,8 @@ public:
 		if (checkToken("[")) {
 			match("[");
 			prevNoOfTabs = noOfTabs;
-			fout2 << symbolTable.back().second << "[";
+			//fout2 << symbolTable.back().second.first << "[";
+			fout2 << lastSymbolNameInSymbolTable << "[";
 			num();
 			match("]");
 			fout2 << "] = ";
@@ -1404,7 +1419,8 @@ public:
 		cout << endl;
 		noOfTabs++;
 		tabs("c3");
-		symbolTable.back().first = "CHAR[]";
+		//symbolTable.back().first = "CHAR[]";
+		symbolTable[lastSymbolNameInSymbolTable].first = "CHAR[]";
 		if (checkToken(";")) {
 			match(";");
 		}
@@ -1434,7 +1450,8 @@ public:
 		}
 		else if (checkToken("=")) {
 			match("=");
-			fout2 << symbolTable.back().second << " = ";
+			//fout2 << symbolTable.back().second.first << " = ";
+			fout2 << lastSymbolNameInSymbolTable << " = ";
 			prevNoOfTabs = noOfTabs;
 			alphaNumber();
 			fout2 << endl;
@@ -1463,7 +1480,8 @@ public:
 		tabs("c1");
 		if (checkToken("[")) {
 			match("[");
-			fout2 << symbolTable.back().second << "[";
+			//fout2 << symbolTable.back().second.first << "[";
+			fout2 << lastSymbolNameInSymbolTable << "[";
 			prevNoOfTabs = noOfTabs;
 			num();
 			match("]");
@@ -2098,8 +2116,782 @@ public:
 			cout << "__";
 		cout << str;
 	}
+	void printSymbolTable() {
+		cout << "symbolTable: " << symbolTable["a"].second << "\n";
+
+		//cout << "symbolTable!!\n";
+		/*for (auto const& p : symbolTable) {
+			cout << "{" << p.first << ": " << p.second.second << "}\n";
+		}*/
+	}
 };
 
+//class TACLexer {
+//public:
+//	string lexString;
+//	
+//	bool arithematicOperator(char str[], long& ptr)
+//	{
+//		bool ans = false;
+//
+//		if (str[ptr] == '+')
+//		{
+//			if (str[ptr + 1] == '+') {
+//				int code = getCode("++");
+//				addTokenPair(code, '^');
+//				ans = true;
+//				ptr += 2;
+//			}
+//			else {
+//				addTokenPair('+', '^');
+//				ans = true;
+//				ptr++;
+//			}
+//		}
+//		else if (str[ptr] == '-')
+//		{
+//			addTokenPair('-', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == '*')
+//		{
+//			addTokenPair('*', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == '/')
+//		{
+//			addTokenPair('/', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//
+//		return ans;
+//	}
+//
+//	bool identifier(char str[], long& ptr)
+//	{
+//		int state = 0, step = 0;
+//		bool flag = false;
+//		bool ans = false;
+//		string id = "";
+//
+//		while (flag == false)
+//		{
+//			switch (state)
+//			{
+//			case 0:
+//				if (str[ptr] >= 'a' && str[ptr] <= 'z' || str[ptr] >= 'A' && str[ptr] <= 'Z')
+//					state = 1;
+//				else
+//					flag = true;
+//				id += str[ptr];
+//				step++;
+//				break;
+//			case 1:
+//				if (str[ptr + step] >= 'a' && str[ptr + step] <= 'z' || str[ptr + step] >= 'A' && str[ptr + step] <= 'Z' || str[ptr + step] >= '0' && str[ptr + step] <= '9' || str[ptr + step] == '_')
+//				{
+//					state = 1;
+//					id += str[ptr + step];
+//					step++;
+//				}
+//				else
+//					state = 2;
+//				break;
+//			case 2:
+//			{
+//				int code = getCode("ID");
+//				int code2 = getCode(id);
+//				addString(code2, id);
+//				addTokenPair(code, code2);
+//				ans = true;
+//				flag = true;
+//				break;
+//			}
+//			default:
+//				break;
+//			}
+//		}
+//
+//		if (ans)
+//			ptr += step;
+//
+//		return ans;
+//	}
+//
+//	bool numericConstant(char str[], long& ptr)
+//	{
+//		int state = 0, step = 0;
+//		bool flag = false;
+//		bool ans = false;
+//		string id = "";
+//
+//		while (flag == false)
+//		{
+//			switch (state)
+//			{
+//			case 0:
+//				if (str[ptr + step] >= '0' && str[ptr + step] <= '9')
+//				{
+//					id += str[ptr + step];
+//					step++;
+//				}
+//				else if (step == 0)
+//					flag = true;
+//				else
+//					state = 1;
+//				break;
+//			case 1:
+//			{
+//				int code = getCode("NUM");
+//				int code2 = getCode(id);
+//				addString(code2, id);
+//				addTokenPair(code, code2);
+//				ans = true;
+//				flag = true;
+//				break;
+//			}
+//			default:
+//				break;
+//			}
+//		}
+//
+//		if (ans)
+//			ptr += step;
+//
+//		return ans;
+//	}
+//
+//	bool literalConstant(char str[], long& ptr)
+//	{
+//		int state = 0, step = 0;
+//		bool flag = false;
+//		bool ans = false;
+//		string id = "";
+//
+//		while (flag == false)
+//		{
+//			switch (state)
+//			{
+//			case 0:
+//				if (str[ptr + step] == '\'')
+//				{
+//					state = 1;
+//					step++;
+//				}
+//				else
+//					flag = true;
+//				break;
+//			case 1:
+//				//if (str[ptr + step] >= 'a' && str[ptr + step] <= 'z' || str[ptr + step] >= 'A' && str[ptr + step] <= 'Z' || str[ptr + step] <= ' ')
+//				if (str[ptr + step] <= 255)
+//				{
+//					id += str[ptr + step];
+//					step++;
+//					state = 2;
+//				}
+//				else
+//					flag = true;
+//				break;
+//			case 2:
+//				if (str[ptr + step] == '\'')
+//				{
+//					state = 3;
+//					step++;
+//				}
+//				else
+//					flag = true;
+//				break;
+//			case 3:
+//			{
+//				int code = getCode("LIT");
+//				int code2 = getCode(id);
+//				addString(code2, id);
+//				addTokenPair(code, code2);
+//				ans = true;
+//				flag = true;
+//				break;
+//			}
+//			default:
+//				break;
+//			}
+//		}
+//
+//		if (ans)
+//			ptr += step;
+//
+//		return ans;
+//	}
+//
+//	bool strings(char str[], long& ptr)
+//	{
+//		int state = 0, step = 0;
+//		bool flag = false;
+//		bool ans = false;
+//		string id = "";
+//
+//		while (flag == false)
+//		{
+//			switch (state)
+//			{
+//			case 0:
+//				if (str[ptr + step] == '"')
+//				{
+//					state = 1;
+//					step++;
+//				}
+//				else
+//					flag = true;
+//				break;
+//			case 1:
+//				if (str[ptr + step] == '\n')
+//					flag = true;
+//				else if (str[ptr + step] != '"')
+//					id += str[ptr + step];
+//				else
+//				{
+//					int code = getCode("STR");
+//					int code2 = getCode(id);
+//					addString(code2, id);
+//					addTokenPair(code, code2);
+//					ans = true;
+//					flag = true;
+//				}
+//				step++;
+//				break;
+//			default:
+//				break;
+//			}
+//		}
+//
+//		if (ans)
+//			ptr += step;
+//
+//		return ans;
+//	}
+//
+//	bool separators(char str[], long& ptr)
+//	{
+//		bool ans = false;
+//
+//		if (str[ptr] == '(')
+//		{
+//			addTokenPair('(', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == ')')
+//		{
+//			addTokenPair(')', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == '[')
+//		{
+//			addTokenPair('[', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == ']')
+//		{
+//			addTokenPair(']', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == '{')
+//		{
+//			addTokenPair('{', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == '}')
+//		{
+//			addTokenPair('}', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == ':')
+//		{
+//			addTokenPair(':', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == ';')
+//		{
+//			addTokenPair(';', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == ',')
+//		{
+//			addTokenPair(',', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		return ans;
+//	}
+//
+//	bool conditionals(char str[], long& ptr)
+//	{
+//		int state = 0, step = 0;
+//		bool flag = false;
+//		bool ans = false;
+//		string condition = "";
+//
+//		while (flag == false)
+//		{
+//			switch (state)
+//			{
+//			case 0:
+//				if (str[ptr] == 'i' || str[ptr] == 'I')
+//					state = 1;
+//				else if (str[ptr] == 'e' || str[ptr] == 'E')
+//					state = 3;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 1:
+//				if (str[ptr + step] == 'f' || str[ptr + step] == 'F')
+//					state = 2;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 2:
+//				if (str[ptr + step] == ' ' || str[ptr + step] == '(')
+//				{
+//					int code = getCode("IF");
+//					addTokenPair(code, '^');
+//					ans = true;
+//				}
+//				flag = true;
+//				break;
+//			case 3:
+//				if (str[ptr + step] == 'l' || str[ptr + step] == 'L')
+//					state = 4;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 4:
+//				if (str[ptr + step] == 's' || str[ptr + step] == 'S')
+//					state = 5;
+//				else if (str[ptr + step] == 'i' || str[ptr + step] == 'I')
+//					state = 7;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 5:
+//				if (str[ptr + step] == 'e' || str[ptr + step] == 'E')
+//					state = 6;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 6:
+//				if (str[ptr + step] == ' ' || str[ptr + step] == ':')
+//				{
+//					int code = getCode("ELSE");
+//					addTokenPair(code, '^');
+//					ans = true;
+//				}
+//				flag = true;
+//				break;
+//			case 7:
+//				if (str[ptr + step] == 'f' || str[ptr + step] == 'F')
+//					state = 8;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 8:
+//				if (str[ptr + step] == ' ' || str[ptr + step] == '(')
+//				{
+//					int code = getCode("ELIF");
+//					addTokenPair(code, '^');
+//					ans = true;
+//				}
+//				flag = true;
+//				break;
+//			default:
+//				break;
+//			}
+//		}
+//
+//		if (ans)
+//			ptr += step;
+//
+//		return ans;
+//	}
+//
+//	bool input(char str[], long& ptr)
+//	{
+//		int state = 0, step = 0;
+//		bool flag = false;
+//		bool ans = false;
+//
+//		while (flag == false)
+//		{
+//			switch (state)
+//			{
+//			case 0:
+//				if (str[ptr] == 'i' || str[ptr] == 'I')
+//					state = 1;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 1:
+//				if (str[ptr + step] == 'n' || str[ptr + step] == 'N')
+//					state = 2;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 2:
+//				if (str[ptr + step] == 'p' || str[ptr + step] == 'P')
+//					state = 3;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 3:
+//				if (str[ptr + step] == 'u' || str[ptr + step] == 'U')
+//					state = 4;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 4:
+//				if (str[ptr + step] == 't' || str[ptr + step] == 'T')
+//					state = 5;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 5:
+//				if (str[ptr + step] == ' ' || str[ptr + step] == '-')
+//					state = 7;
+//				else
+//					flag = true;
+//				break;
+//			case 7:
+//			{
+//				int code = getCode("INPUT");
+//				addTokenPair(code, '^');
+//				ans = true;
+//				flag = true;
+//				break;
+//			}
+//			default:
+//				break;
+//			}
+//		}
+//
+//		if (ans)
+//			ptr += step;
+//
+//		return ans;
+//	}
+//
+//	bool print(char str[], long& ptr)
+//	{
+//		int state = 0, step = 0;
+//		bool flag = false;
+//		bool ans = false;
+//
+//		while (flag == false)
+//		{
+//			switch (state)
+//			{
+//			case 0:
+//				if (str[ptr] == 'p' || str[ptr] == 'P')
+//					state = 1;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 1:
+//				if (str[ptr + step] == 'r' || str[ptr + step] == 'R')
+//					state = 2;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 2:
+//				if (str[ptr + step] == 'i' || str[ptr + step] == 'I')
+//					state = 3;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 3:
+//				if (str[ptr + step] == 'n' || str[ptr + step] == 'N')
+//					state = 4;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 4:
+//				if (str[ptr + step] == 't' || str[ptr + step] == 'T')
+//					state = 5;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 5:
+//				if (str[ptr + step] == '(')
+//				{
+//					int code = getCode("PRINT");
+//					addTokenPair(code, '^');
+//					ans = true;
+//					flag = true;
+//				}
+//				else if (str[ptr + step] == 'l' || str[ptr + step] == 'L')
+//				{
+//					state = 6;
+//					step++;
+//				}
+//				else
+//					flag = true;
+//				break;
+//			case 6:
+//				if (str[ptr + step] == 'n' || str[ptr + step] == 'N')
+//					state = 7;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 7:
+//				if (str[ptr + step] == '(')
+//				{
+//					int code = getCode("PRINTLN");
+//					addTokenPair(code, '^');
+//					ans = true;
+//				}
+//				flag = true;
+//				break;
+//			default:
+//				break;
+//			}
+//		}
+//
+//		if (ans)
+//			ptr += step;
+//
+//		return ans;
+//	}
+//
+//	bool relationalOperators(char str[], long& ptr)
+//	{
+//		int state = 0, step = 0;
+//		bool flag = false;
+//		bool ans = false;
+//
+//		while (flag == false)
+//		{
+//			switch (state)
+//			{
+//			case 0:
+//				if (str[ptr] == '<')
+//					state = 1;
+//				else if (str[ptr] == '>')
+//					state = 2;
+//				else if (str[ptr] == '=')
+//					state = 3;
+//				else if (str[ptr] == '!')
+//					state = 4;
+//				else
+//					flag = true;
+//				step++;
+//				break;
+//			case 1:
+//				if (str[ptr + step] == '=')
+//				{
+//					int code = getCode("RO");
+//					int code2 = getCode("<=");
+//					addTokenPair(code, code2);
+//					ans = true;
+//				}
+//				else
+//				{
+//					int code = getCode("RO");
+//					addTokenPair(code, '<');
+//					ans = true;
+//				}
+//				flag = true;
+//				step++;
+//				break;
+//			case 2:
+//				if (str[ptr + step] == '=')
+//				{
+//					int code = getCode("RO");
+//					int code2 = getCode(">=");
+//					addTokenPair(code, code2);
+//					ans = true;
+//				}
+//				else
+//				{
+//					int code = getCode("RO");
+//					addTokenPair(code, '>');
+//					ans = true;
+//				}
+//				flag = true;
+//				step++;
+//				break;
+//			case 3:
+//				if (str[ptr + step] == '=')
+//				{
+//					int code = getCode("RO");
+//					int code2 = getCode("==");
+//					addTokenPair(code, code2);
+//					ans = true;
+//				}
+//				flag = true;
+//				step++;
+//				break;
+//			case 4:
+//				if (str[ptr + step] == '=')
+//				{
+//					int code = getCode("RO");
+//					int code2 = getCode("!=");
+//					addTokenPair(code, code2);
+//					ans = true;
+//				}
+//				flag = true;
+//				step++;
+//				break;
+//			default:
+//				break;
+//			}
+//		}
+//
+//		if (ans)
+//			ptr += step;
+//
+//		return ans;
+//	}
+//
+//	bool assignmentOperator(char str[], long& ptr)
+//	{
+//		bool ans = false;
+//
+//		if (str[ptr] == '=' && str[ptr + 1] != '=')
+//		{
+//			addTokenPair('=', '^');
+//			ans = true;
+//			ptr++;
+//		}
+//		else if (str[ptr] == '-' && str[ptr + 1] == '>') {
+//			int code = getCode("->");
+//			addTokenPair(code, '^');
+//			ans = true;
+//			ptr += 2;
+//		}
+//		return ans;
+//	}
+//
+//	bool lex()
+//	{
+//		char str[10240];
+//		strcpy_s(str, lexString.c_str());
+//		long i = 0;
+//		bool flag = true;
+//		long len = strlen(str);
+//
+//
+//		while (flag && i < len)
+//		{
+//			while (str[i] == ' ' || str[i] == '\t' || str[i] == '\n') {
+//				if (str[i] == '\n')
+//					newLines++;
+//				i++;
+//			}
+//			if (!comments(str, i))
+//				if (!dataTypes(str, i))
+//					if (!assignmentOperator(str, i))
+//						if (!arithematicOperator(str, i))
+//							if (!numericConstant(str, i))
+//								if (!literalConstant(str, i))
+//									if (!strings(str, i))
+//										if (!separators(str, i))
+//											if (!conditionals(str, i))
+//												if (!loop(str, i))
+//													if (!input(str, i))
+//														if (!print(str, i))
+//															if (!relationalOperators(str, i))
+//																if (!identifier(str, i))
+//																	if (str[i] != '\0')
+//																		flag = false;
+//			if (str[i] == '\0')
+//				i += 10;
+//		}
+//
+//		if (!flag) {
+//			int col = i - charsTillNewLine(str);
+//			cout << "Error at Token Number " << i << ", Located at Line " << newLines + 1 << ", Column " << col + 1 << endl;
+//		}
+//		return flag;
+//	}
+//
+//	void initialise()
+//	{
+//		string keyWords[] = { "INT", "CHAR", "COMMENT", "ID", "NUM", "LIT", "STR", "IF", "ELSE", "ELIF", "WHILE", "INPUT", "PRINT", "PRINT", "PRINTLN", "RO", "<=", ">=", "==", "!=", "->", "++" };
+//		for (int i = 0; i < 22; i++)
+//		{
+//			pair<int, string> temp;
+//			temp.first = 256 + i;
+//			temp.second = keyWords[i];
+//			codeString.push_back(temp);
+//		}
+//	}
+//};
+
+
+class MachineCodeGenerator {
+public:
+	Parser* parser;
+	string TACFilename;
+	string machineCodeFilename;
+	ifstream fin;
+	ofstream fout;
+	MachineCodeGenerator(Parser* _parser, string _TACFilename, string _machineCodeFilename) {
+		TACFilename = _TACFilename;
+		machineCodeFilename = _machineCodeFilename;
+		fin.open(TACFilename);
+		fout.open(machineCodeFilename);
+	}
+	string parse(string TAC) {
+		////if(TAC.compare()
+		//string delim = "\t";
+		//auto start = 0U;
+		//auto end = s.find(delim);
+		//while (end != std::string::npos)
+		//{
+		//	std::cout << s.substr(start, end - start) << std::endl;
+		//		start = end + delim.length();
+		//		end = s.find(delim, start);
+		//}
+	}
+	string toMachineCode(string TAC) {
+		string MC = parse(TAC);
+		return MC;
+	}
+	void convertTACtoMachineCode() {
+		string TAC;
+		while (!fin.eof()) {
+			getline(fin, TAC);
+			string MC = toMachineCode(TAC);
+			cout << MC << endl;
+			fout << MC << endl;
+		}
+		fin.close();
+		fout.close();
+	}
+};
 int main()
 {
 	Lexer lexer("input.cc", "output.txt");
@@ -2112,6 +2904,10 @@ int main()
 		Parser parser(&lexer, "symbolTable.txt", "TAC.txt");
 		parser.initialize();
 		parser.program();
+		//parser.printSymbolTable();
+
+		MachineCodeGenerator machineCodeGnerator(&parser, "TAC.txt", "MCG.txt");
+		machineCodeGnerator.convertTACtoMachineCode();
 	}
 }
 
