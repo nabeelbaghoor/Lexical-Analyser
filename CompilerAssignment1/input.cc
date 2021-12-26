@@ -11,7 +11,7 @@ for fibonacci numbers
 
 print("enter a number");
 input -> num;
-int: a=0, b=1, c=0;
+int: a=0, b=1, c=0, g=0, e=0, d=0, f=0;
 print("The fibonacci seq is: ");
 print(a);
 print(b);
@@ -49,7 +49,7 @@ println(a);
 else:
 {
 println(b);
-println(b);	
+println(b);
 }
 
 int : p1 = a + b / c * g - d * e + f;
