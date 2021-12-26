@@ -1164,11 +1164,13 @@ public:
 		opCodeTable["/"] = 8;
 		opCodeTable["*"] = 9;
 		opCodeTable["goto"] = 10;
-		opCodeTable["IN"] = 11;
-		opCodeTable["OUT"] = 12;
-		opCodeTable["OUTLN"] = 13;
-		opCodeTable["if"] = 14;
-		opCodeTable["="] = 15;
+		opCodeTable["INI"] = 11;
+		opCodeTable["INC"] = 12;
+		opCodeTable["INS"] = 13;
+		opCodeTable["OUTI"] = 14;
+		opCodeTable["OUTC"] = 15;
+		opCodeTable["OUTS"] = 16;
+		opCodeTable["="] = 17;
 	}
 	string getNewToken() {
 		char buffer[10];
@@ -2218,11 +2220,6 @@ public:
 				mem[lineNo][i] = int();
 			}
 		}
-		/*for (int i = 0; i < 4; i++)
-		{
-			cout << mem[lineNo][i] << " ";
-		}
-		cout << endl;*/
 		lineNo++;
 	}
 	bool isAssignment(vector<string>tokens) {
@@ -2340,61 +2337,170 @@ public:
 	unsigned char* bytes;
 	VM(MachineCodeGenerator* _machineCodeGnerator) {
 		machineCodeGnerator = _machineCodeGnerator;
-		bytes = new unsigned char[machineCodeGnerator->parser->currentAddress+4+1];
+		bytes = new unsigned char[machineCodeGnerator->parser->currentAddress+4];
 	}
 	void initializeBytes() {
 	}
-	//size: 1 byte
-	char getCharValue(int address) {
+	/*int readInt(int address) {
 
+	}
+	char readChar(int address) {
+
+	}
+	char* readArr(int address) {
+
+	}
+	void saveInt(int address,int i) {
+
+	}
+	void saveArr(int address,char *ch) {
+
+	}
+	void saveChar(int address,char ch) {
+
+	}*/
+
+	char readChar(int address) {
+		char ans = (char)bytes[address];
+		return ans;
+	}
+	void saveChar(int address, char value) {
+		bytes[address] = value;
 	}
 	//size: 4 bytes
-	int getIntValue(int address) {
-
+	int readInt(int address) {
+		int ans = 0;
+		for (int i = address; i < address + 4; i++) {
+			ans = ans << 8;
+			ans += bytes[i];
+		}
+		return ans;
+	}
+	void saveInt(int address, int value) {
+		int mask = 255;
+		int ans = value;
+		for (int i = address + 3; i >= address; i--) {
+			int temp = ans & mask;
+			bytes[i] = (unsigned char)temp;
+			ans = ans >> 8;
+		}
 	}
 	//size: varies
-	char* getCharArrayValue(int address) {
+	char* readArr(int address) {
+		string temp = "";
+		for (int i = 0; bytes[i] != '\n'; i++)
+			temp += bytes[i];
 
+		char* ptr = new char[temp.size() + 1];
+		strcpy(ptr, temp.c_str());
+
+		return ptr;
 	}
+
 	void run() {
+		int** mem = machineCodeGnerator->mem;
 		int lineNo = 1;
 		bool flag = true;
 		while (flag) {
-			switch (machineCodeGnerator->mem[lineNo][0])
+			switch (mem[lineNo][0])
 			{
 			case 0://==
+				if (readInt(mem[lineNo][1]) == readInt(mem[lineNo][2])) {
+					lineNo = mem[lineNo][3];
+				}
 				break;
 			case 1://<=
+				if (readInt(mem[lineNo][1]) <= readInt(mem[lineNo][2])) {
+					lineNo = mem[lineNo][3];
+				}
 				break;
 			case 2://>=
+				if (readInt(mem[lineNo][1]) >= readInt(mem[lineNo][2])) {
+					lineNo = mem[lineNo][3];
+				}
 				break;
 			case 3://!=
+				if (readInt(mem[lineNo][1]) != readInt(mem[lineNo][2])) {
+					lineNo = mem[lineNo][3];
+				}
 				break;
 			case 4://>
+				if (readInt(mem[lineNo][1]) > readInt(mem[lineNo][2])) {
+					lineNo = mem[lineNo][3];
+				}
 				break;
 			case 5://<
+				if (readInt(mem[lineNo][1]) < readInt(mem[lineNo][2])) {
+					lineNo = mem[lineNo][3];
+				}
 				break;
 			case 6://+
+				saveInt(mem[lineNo][3],
+					readInt(mem[lineNo][1]) + readInt(mem[lineNo][2]));
 				break;
 			case 7://-
+				saveInt(mem[lineNo][3],
+					readInt(mem[lineNo][1]) - readInt(mem[lineNo][2]));
 				break;
 			case 8://'/
+				saveInt(mem[lineNo][3],
+					readInt(mem[lineNo][1]) / readInt(mem[lineNo][2]));
 				break;
 			case 9://*
+				saveInt(mem[lineNo][3],
+					readInt(mem[lineNo][1]) * readInt(mem[lineNo][2]));
 				break;
 			case 10://goto
+				lineNo = mem[lineNo][1];
 				break;
 			case 11://IN
+				if (true) {
+					int input;
+					cin >> input;
+					saveInt(mem[lineNo][1], input);
+				}
+				else if (true) {
+					char input;
+					cin >> input;
+					saveChar(mem[lineNo][1], input);
+				}
+				//else if (true) {
+				//	char* input;
+				//	cin >> input;
+				//	//saveArr(mem[lineNo][1],input);
+				//}
+				
 				break;
 			case 12://OUT
+				if (true) {
+					cout<<readInt(mem[lineNo][1]);
+				}
+				else if (true) {
+					cout<<readChar(mem[lineNo][1]);
+				}
+				else if (true) {
+					cout << readArr(mem[lineNo][1]);
+				}
 				break;
 			case 13://OUTLN
+				if (true) {
+					cout << readInt(mem[lineNo][1])<<endl;
+				}
+				else if (true) {
+					cout << readChar(mem[lineNo][1])<<endl;
+				}
+				else if (true) {
+					cout << readArr(mem[lineNo][1]);
+				}
 				break;
 			case 14://if
 				break;
 			case 15://=
+				saveInt(mem[lineNo][2],
+					readInt(mem[lineNo][1]));
 				break;
 			default:
+				flag = false;
 				break;
 			}
 		}
