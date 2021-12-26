@@ -2876,6 +2876,7 @@ public:
 		//		start = end + delim.length();
 		//		end = s.find(delim, start);
 		//}
+		return TAC;
 	}
 	string toMachineCode(string TAC) {
 		string MC = parse(TAC);

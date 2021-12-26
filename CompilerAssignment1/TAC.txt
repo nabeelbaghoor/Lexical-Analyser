@@ -1,0 +1,70 @@
+t1 = t0
+my_char = t1
+OUT t2
+OUT my_char
+OUT t3
+IN num
+a = t4
+b = t5
+c = t6
+OUT t7
+OUT a
+OUT b
+if c < num goto 15
+goto 28
+if a > b goto 17
+goto 25
+t8 = b
+t9 = a + t8
+temp = t9
+t10 = b
+a = t10
+t11 = temp
+b = t11
+goto 25
+OUT temp
+c ++
+goto 13
+OUT temp\n
+if c < num goto 31
+goto 37
+if a > b goto 33
+goto 35
+OUT temp\n
+goto 35
+OUT temp\n
+goto 49
+if c > num goto 39
+goto 42
+OUT a\n
+OUT a\n
+goto 49
+if c > num goto 44
+goto 47
+OUT a\n
+OUT a\n
+goto 49
+OUT b\n
+OUT b\n
+t12 = c
+t13 = b / t12
+t14 = g
+t15 = t13 * t14
+t16 = e
+t17 = d * t16
+t18 = f
+t19 = t17 + t18
+t20 = t15 - t19
+t21 = a + t20
+p1 = t21
+t22 = c
+t23 = b / t22
+t24 = g
+t25 = t23 * t24
+t26 = e
+t27 = d * t26
+t28 = f
+t29 = t27 + t28
+t30 = t25 - t29
+a = t30
+p1 = a
