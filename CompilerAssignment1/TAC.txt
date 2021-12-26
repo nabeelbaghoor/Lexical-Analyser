@@ -1,74 +1,37 @@
-t1 = t0
-my_char = t1
-OUT t2
+t0 = 'o'
+my_char = t0
+OUT t1
 OUT my_char
-OUT t3
+OUT t2
 IN num
 a = 0
 b = 1
-c = 0
+c = 1
 g = 0
 e = 0
 d = 0
 f = 0
-OUT t4
+OUT t3
 OUT a
 OUT b
-if c < num goto 19
-goto 32
-if a > b goto 21
-goto 29
-t5 = b
-t6 = a + t5
-temp = t6
-t7 = b
-a = t7
-t8 = temp
-b = t8
-goto 29
-OUT temp
-c ++
-goto 17
-OUT temp\n
-if c < num goto 35
-goto 41
-if a > b goto 37
-goto 39
-OUT temp\n
-goto 39
-OUT temp\n
-goto 53
-if c > num goto 43
-goto 46
-OUT a\n
-OUT a\n
-goto 53
-if c > num goto 48
-goto 51
-OUT a\n
-OUT a\n
-goto 53
-OUT b\n
-OUT b\n
-t9 = c
-t10 = b / t9
-t11 = g
-t12 = t10 * t11
-t13 = e
-t14 = d * t13
-t15 = f
-t16 = t14 + t15
-t17 = t12 - t16
-t18 = a + t17
-p1 = t18
-t19 = c
-t20 = b / t19
-t21 = g
-t22 = t20 * t21
-t23 = e
-t24 = d * t23
-t25 = f
-t26 = t24 + t25
-t27 = t22 - t26
-a = t27
+t4 = c
+t5 = b / t4
+t6 = g
+t7 = t5 * t6
+t8 = e
+t9 = d * t8
+t10 = f
+t11 = t9 + t10
+t12 = t7 - t11
+t13 = a + t12
+p1 = t13
+t14 = c
+t15 = b / t14
+t16 = e
+t17 = d * t16
+t18 = f
+t19 = t17 + t18
+t20 = t15 - t19
+a = t20
 p1 = a
+OUT p1

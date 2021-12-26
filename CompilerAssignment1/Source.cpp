@@ -1173,8 +1173,11 @@ public:
 		opCodeTable["OUTI"] = 13;
 		opCodeTable["OUTC"] = 14;
 		opCodeTable["OUTS"] = 15;
-		opCodeTable["="] = 16;
+		opCodeTable["=I"] = 16;
 		opCodeTable["++"] = 17;
+		opCodeTable["=C"] = 18;
+		opCodeTable["=IL"] = 19;
+		opCodeTable["=CL"] = 20;
 	}
 	string getNewToken() {
 		char buffer[10];
@@ -1404,7 +1407,7 @@ public:
 			//string tokenName = getNewToken();
 			//addToSymbolTable("CHAR", tokenName);
 			//fout2 << tokenName;
-			fout2 << atoi(currLexeme.c_str());
+			fout2 << "'" << currLexeme << "'";
 			match("LIT");
 		}
 		else if (checkToken("ID")) {
@@ -1556,15 +1559,17 @@ public:
 		noOfTabs++;
 		tabs("R");
 		if (checkToken("LIT")) {
-			string tokenName = getNewToken();
-			addToSymbolTable("CHAR", tokenName);
-			fout2 << tokenName;
+			//string tokenName = getNewToken();
+			//addToSymbolTable("CHAR", tokenName);
+			//fout2 << tokenName;
+			fout2 << atoi(currLexeme.c_str());
 			match("LIT");
 		}
 		else if (checkToken("NUM")) {
-			string tokenName = getNewToken();
-			addToSymbolTable("INT", tokenName);
-			fout2 << tokenName;
+			//string tokenName = getNewToken();
+			//addToSymbolTable("INT", tokenName);
+			//fout2 << tokenName;
+			fout2 << currLexeme;
 			match("NUM");
 		}
 		else if (checkToken("ID")) {
@@ -1582,15 +1587,17 @@ public:
 		noOfTabs++;
 		tabs("R2");
 		if (checkToken("LIT")) {
-			string tokenName = getNewToken();
-			addToSymbolTable("CHAR", tokenName);
-			ans = tokenName;
+			//string tokenName = getNewToken();
+			//addToSymbolTable("CHAR", tokenName);
+			//ans = tokenName;
+			ans = "'" + currLexeme + "'";
 			match("LIT");
 		}
 		else if (checkToken("NUM")) {
-			string tokenName = getNewToken();
-			addToSymbolTable("INT", tokenName);
-			ans = tokenName;
+			//string tokenName = getNewToken();
+			//addToSymbolTable("INT", tokenName);
+			//ans = tokenName;
+			ans = currLexeme;
 			match("NUM");
 		}
 		else if (checkToken("ID")) {
@@ -1813,6 +1820,17 @@ public:
 			string val = B();
 			fout2 << myName << " = " << val << endl;
 			lineNumber++;
+			//if (symbolTable[lastSymbolNameInSymbolTable].first=="INT") {
+			//	string val = B();
+			//	fout2 << myName << " = " << val << endl;
+			//	lineNumber++;
+			//}
+			//else {
+			//	int a = currLexeme[0];
+			//	fout2 << myName << " = " << a << endl;
+			//	lineNumber++;
+			//	match("LIT");
+			//}
 		}
 		else {
 			abort("Bad token: " + currToken);
@@ -2206,10 +2224,16 @@ public:
 		return result;
 	}
 	char* getSymbolAdress(string symbol) {
-		if ((symbol[0]>='a' && symbol[0]<='z') ||
-			(symbol[0] >= 'A' && symbol[0] <= 'Z')
-			) {
-			return (char*)symbol.c_str();
+		if (symbol[0] >= '0' && symbol[0] <= '9') {
+			char* arr = new char[symbol.size() + 1];
+			strcpy(arr, symbol.c_str());
+			return arr;
+		}
+		else if (symbol[0] == '\'') {
+			char* arr = new char[4];
+			int a = symbol[1];
+			itoa(a, arr, 10);
+			return arr;
 		}
 		else if (parser->symbolTable.find(symbol) == parser->symbolTable.end()) {
 			abort("Variable: " + symbol + " is not declared!");
@@ -2238,7 +2262,14 @@ public:
 	bool isAssignment(vector<string>tokens) {
 		if (tokens.size() == 3 && tokens[1] == "=") {
 			vector<int>data;
-			data.push_back(parser->opCodeTable["="]);
+			if (tokens[2][0] >= '0' && tokens[2][0] <= '9')
+				data.push_back(parser->opCodeTable["=IL"]);
+			else if (tokens[2][0] == '\'')
+				data.push_back(parser->opCodeTable["=CL"]);
+			else if (parser->symbolTable[tokens[0]].first == "INT")
+				data.push_back(parser->opCodeTable["=I"]);
+			else
+				data.push_back(parser->opCodeTable["=C"]);
 			data.push_back(atoi(getSymbolAdress(tokens[2])));
 			data.push_back(atoi(getSymbolAdress(tokens[0])));
 			addToMemArrayAndFile(data);
@@ -2442,31 +2473,37 @@ public:
 			case 0://==
 				if (readInt(mem[lineNo][1]) == readInt(mem[lineNo][2])) {
 					lineNo = mem[lineNo][3];
+					lineNo--;
 				}
 				break;
 			case 1://<=
 				if (readInt(mem[lineNo][1]) <= readInt(mem[lineNo][2])) {
 					lineNo = mem[lineNo][3];
+					lineNo--;
 				}
 				break;
 			case 2://>=
 				if (readInt(mem[lineNo][1]) >= readInt(mem[lineNo][2])) {
 					lineNo = mem[lineNo][3];
+					lineNo--;
 				}
 				break;
 			case 3://!=
 				if (readInt(mem[lineNo][1]) != readInt(mem[lineNo][2])) {
 					lineNo = mem[lineNo][3];
+					lineNo--;
 				}
 				break;
 			case 4://>
 				if (readInt(mem[lineNo][1]) > readInt(mem[lineNo][2])) {
 					lineNo = mem[lineNo][3];
+					lineNo--;
 				}
 				break;
 			case 5://<
 				if (readInt(mem[lineNo][1]) < readInt(mem[lineNo][2])) {
 					lineNo = mem[lineNo][3];
+					lineNo--;
 				}
 				break;
 			case 6://+
@@ -2487,6 +2524,7 @@ public:
 				break;
 			case 10://goto
 				lineNo = mem[lineNo][1];
+				lineNo--;
 				break;
 			case 11://INI
 				int inpi;
@@ -2516,12 +2554,20 @@ public:
 					cout << endl;
 				}
 				break;
-			case 16://=
-				saveInt(mem[lineNo][2],readInt(mem[lineNo][1]));
+			case 16://=I
+				saveInt(mem[lineNo][2], readInt(mem[lineNo][1]));
 				break;
 			case 17:
-				saveInt(mem[lineNo][1],
-					readInt(mem[lineNo][1]));
+				saveInt(mem[lineNo][1], readInt(mem[lineNo][1]) + 1);
+				break;
+			case 18://=C
+				saveChar(mem[lineNo][2], readChar(mem[lineNo][1]));
+				break;
+			case 19://=IL
+				saveInt(mem[lineNo][2], mem[lineNo][1]);
+				break;
+			case 20://=CL
+				saveChar(mem[lineNo][2], mem[lineNo][1]);
 				break;
 			default:
 				flag = false;

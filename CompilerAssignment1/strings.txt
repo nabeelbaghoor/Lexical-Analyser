@@ -1,3 +1,3 @@
-10,my char contains: 
-28,enter a number
-70,The fibonacci seq is: 
+9,my char contains: 
+27,enter a number
+69,The fibonacci seq is: 
