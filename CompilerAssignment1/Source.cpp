@@ -1,4 +1,5 @@
 //#include "pch.h"
+#pragma warning(disable:4996)
 #include <fstream>
 #include <iostream>
 #include <string>
@@ -1124,11 +1125,13 @@ public:
 	string peekLexeme;
 	string symbolTableFilename;
 	string tacFileName;
+	string stringFileName;
 	unordered_map<string, pair<string, string>> symbolTable;
 	unordered_map<string, int> opCodeTable;
 	//list<pair<string, pair<string, string>>> symbolTable;
 	ofstream fout;
 	ofstream fout2;
+	ofstream fout3;
 	int currentAddress;
 	int noOfTabs;
 	int prevNoOfTabs;
@@ -1138,7 +1141,7 @@ public:
 	Parser() {
 
 	}
-	Parser(Lexer* _lexer, string _symbolTableFilename, string _tacFileName) {
+	Parser(Lexer* _lexer, string _symbolTableFilename, string _tacFileName, string _stringFileName) {
 		lexer = _lexer;
 		tokenCount = 0;
 		currentAddress = 0;
@@ -1147,9 +1150,10 @@ public:
 		lineNumber = 0;
 		symbolTableFilename = _symbolTableFilename;
 		tacFileName = _tacFileName;
+		stringFileName = _stringFileName;
 		fout.open(symbolTableFilename);
 		fout2.open(tacFileName);
-
+		fout3.open(stringFileName);
 		initializeOpCodeTable();
 	}
 	void initializeOpCodeTable() {
@@ -1426,6 +1430,7 @@ public:
 		}
 		else if (checkToken("STR")) {
 			int size = currLexeme.size();
+			fout3 << currentAddress << "," << currLexeme << endl;
 			match("STR");
 			string tokenName = getNewToken();
 			addToSymbolTable("CHAR[]", tokenName, size);
@@ -1963,6 +1968,7 @@ public:
 		if (checkToken("STR")) {
 			int size = currLexeme.size();
 			string tokenName = getNewToken();
+			fout3 << currentAddress << "," << currLexeme << endl;
 			addToSymbolTable("CHAR[]", tokenName, size);
 			fout2 << tokenName;
 			//Initialise this value in memory later
@@ -2142,10 +2148,10 @@ public:
 	void printSymbolTable() {
 		cout << "symbolTable: " << opCodeTable["="] << "\n";
 
-	/*	cout << "symbolTable!!\n";
-		for (auto const& p : symbolTable) {
-			cout << "{" << p.first << ": " << p.second.second << "}\n";
-		}*/
+		/*	cout << "symbolTable!!\n";
+			for (auto const& p : symbolTable) {
+				cout << "{" << p.first << ": " << p.second.second << "}\n";
+			}*/
 	}
 };
 
@@ -2156,26 +2162,26 @@ public:
 	string machineCodeFilename;
 	ifstream fin;
 	ofstream fout;
-	int**mem;
+	int** mem;
 	int totalLines;
 	int lineNo;
 	MachineCodeGenerator(Parser* _parser, string _TACFilename, string _machineCodeFilename) {
 		parser = _parser;
 		TACFilename = _TACFilename;
-machineCodeFilename = _machineCodeFilename;
-lineNo = 1;
+		machineCodeFilename = _machineCodeFilename;
+		lineNo = 1;
 
-//get no of lines in TAC
-fin.open(TACFilename);
-int lines = 0; string line;
-while (getline(fin, line))
-lines++;
-totalLines = lines;
-mem = new int* [lines + 1];
-fin.close();
+		//get no of lines in TAC
+		fin.open(TACFilename);
+		int lines = 0; string line;
+		while (getline(fin, line))
+			lines++;
+		totalLines = lines;
+		mem = new int* [lines + 1];
+		fin.close();
 
-fin.open(TACFilename);
-fout.open(machineCodeFilename);
+		fin.open(TACFilename);
+		fout.open(machineCodeFilename);
 	}
 	void abort(string message = "") {
 		cout << "Error: " + message << endl;
@@ -2259,13 +2265,13 @@ fout.open(machineCodeFilename);
 			}
 			else {
 				vector<int>data;
-				if (parser->symbolTable[tokens[1].substr(0, tokens[1].length() - 2)].first == "INT") {
+				if (parser->symbolTable[tokens[1]].first == "INT") {
 					data.push_back(parser->opCodeTable["OUTI"]);
 				}
-				else if (parser->symbolTable[tokens[1].substr(0, tokens[1].length() - 2)].first == "CHAR") {
+				else if (parser->symbolTable[tokens[1]].first == "CHAR") {
 					data.push_back(parser->opCodeTable["OUTC"]);
 				}
-				else if (parser->symbolTable[tokens[1].substr(0, tokens[1].length() - 2)].first == "CHAR[]") {
+				else if (parser->symbolTable[tokens[1]].first == "CHAR[]") {
 					data.push_back(parser->opCodeTable["OUTS"]);
 				}
 				data.push_back(atoi(getSymbolAdress(tokens[1])));
@@ -2278,7 +2284,7 @@ fout.open(machineCodeFilename);
 	bool isInput(vector<string>tokens) {
 		if (tokens.size() == 2 && tokens[0] == "IN") {
 			vector<int>data;
-			if (parser->symbolTable[tokens[1]].first == "INT"){
+			if (parser->symbolTable[tokens[1]].first == "INT") {
 				data.push_back(parser->opCodeTable["INI"]);
 			}
 			else if (parser->symbolTable[tokens[1]].first == "CHAR") {
@@ -2356,10 +2362,31 @@ fout.open(machineCodeFilename);
 class VM {
 public:
 	MachineCodeGenerator* machineCodeGnerator;
+	string stringFileName;
 	unsigned char* bytes;
-	VM(MachineCodeGenerator* _machineCodeGnerator) {
+	VM(MachineCodeGenerator* _machineCodeGnerator, string _stringFileName) {
 		machineCodeGnerator = _machineCodeGnerator;
-		bytes = new unsigned char[machineCodeGnerator->parser->currentAddress+4];
+		stringFileName = _stringFileName;
+		bytes = new unsigned char[machineCodeGnerator->parser->currentAddress + 1];
+	}
+	void initializeBytes() {
+		ifstream fin(stringFileName);
+		while (!fin.eof()) {
+			string temp;
+			getline(fin, temp);
+			if (temp.size() > 1) {
+				int pos = temp.find(",");
+				char addressTemp[5];
+				for (int i = 0; i < pos; i++)
+					addressTemp[i] = temp[i];
+				int address = atoi(addressTemp);
+				string sub = temp.substr(pos + 1);
+				cout << address << endl;
+				for (int i = 0; i < sub.size(); i++)
+					saveChar(i + address, sub[i]);
+				saveChar(sub.size() + address, '\0');
+			}
+		}
 	}
 	char readChar(int address) {
 		char ans = (char)bytes[address];
@@ -2465,13 +2492,13 @@ public:
 				saveChar(mem[lineNo][1], inpc);
 				break;
 			case 13://OUTI
-				cout<<readInt(mem[lineNo][1]);
+				cout << readInt(mem[lineNo][1]);
 				if (readInt(mem[lineNo][2])) {
 					cout << endl;
 				}
 				break;
 			case 14://OUTC
-				cout<<readChar(mem[lineNo][1]);
+				cout << readChar(mem[lineNo][1]);
 				if (readInt(mem[lineNo][2])) {
 					cout << endl;
 				}
@@ -2502,15 +2529,16 @@ int main()
 	{
 		//lexer.displayTokens();
 		lexer.GetReadyForParser();
-		Parser parser(&lexer, "symbolTable.txt", "TAC.txt");
+		Parser parser(&lexer, "symbolTable.txt", "TAC.txt", "strings.txt");
 		parser.initialize();
 		parser.program();
-		//parser.printSymbolT able();
+		//parser.printSymbolTable();
 
 		MachineCodeGenerator machineCodeGnerator(&parser, "TAC.txt", "MCG.txt");
 		machineCodeGnerator.convertTACtoMachineCode();
 
-		VM  vm(&machineCodeGnerator);
+		VM  vm(&machineCodeGnerator, "strings.txt");
+		vm.initializeBytes();
 		vm.run();
 	}
 }
