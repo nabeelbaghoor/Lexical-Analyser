@@ -4,27 +4,27 @@ OUT t2
 OUT my_char
 OUT t3
 IN num
-a = t4
-b = t5
-c = t6
-g = t7
-e = t8
-d = t9
-f = t10
-OUT t11
+a = 0
+b = 1
+c = 0
+g = 0
+e = 0
+d = 0
+f = 0
+OUT t4
 OUT a
 OUT b
 if c < num goto 19
 goto 32
 if a > b goto 21
 goto 29
-t12 = b
-t13 = a + t12
-temp = t13
-t14 = b
-a = t14
-t15 = temp
-b = t15
+t5 = b
+t6 = a + t5
+temp = t6
+t7 = b
+a = t7
+t8 = temp
+b = t8
 goto 29
 OUT temp
 c ++
@@ -50,25 +50,25 @@ OUT a\n
 goto 53
 OUT b\n
 OUT b\n
-t16 = c
-t17 = b / t16
-t18 = g
-t19 = t17 * t18
-t20 = e
-t21 = d * t20
-t22 = f
-t23 = t21 + t22
-t24 = t19 - t23
-t25 = a + t24
-p1 = t25
-t26 = c
-t27 = b / t26
-t28 = g
-t29 = t27 * t28
-t30 = e
-t31 = d * t30
-t32 = f
-t33 = t31 + t32
-t34 = t29 - t33
-a = t34
+t9 = c
+t10 = b / t9
+t11 = g
+t12 = t10 * t11
+t13 = e
+t14 = d * t13
+t15 = f
+t16 = t14 + t15
+t17 = t12 - t16
+t18 = a + t17
+p1 = t18
+t19 = c
+t20 = b / t19
+t21 = g
+t22 = t20 * t21
+t23 = e
+t24 = d * t23
+t25 = f
+t26 = t24 + t25
+t27 = t22 - t26
+a = t27
 p1 = a

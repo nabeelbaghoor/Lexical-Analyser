@@ -1,3 +1,3 @@
 10,my char contains: 
 28,enter a number
-98,The fibonacci seq is: 
+70,The fibonacci seq is: 

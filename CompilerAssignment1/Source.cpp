@@ -1174,6 +1174,7 @@ public:
 		opCodeTable["OUTC"] = 14;
 		opCodeTable["OUTS"] = 15;
 		opCodeTable["="] = 16;
+		opCodeTable["++"] = 17;
 	}
 	string getNewToken() {
 		char buffer[10];
@@ -1245,9 +1246,10 @@ public:
 		noOfTabs++;
 		tabs("num");
 		if (checkToken("NUM")) {
-			string tokenName = getNewToken();
-			addToSymbolTable("INT", tokenName);
-			fout2 << tokenName;
+			//string tokenName = getNewToken();
+			//addToSymbolTable("INT", tokenName);
+			//fout2 << tokenName;
+			fout2 << currLexeme;
 			match("NUM");
 		}
 		else if (checkToken("ID")) {
@@ -1399,9 +1401,10 @@ public:
 		noOfTabs++;
 		tabs("alphaNumber");
 		if (checkToken("LIT")) {
-			string tokenName = getNewToken();
-			addToSymbolTable("CHAR", tokenName);
-			fout2 << tokenName;
+			//string tokenName = getNewToken();
+			//addToSymbolTable("CHAR", tokenName);
+			//fout2 << tokenName;
+			fout2 << atoi(currLexeme.c_str());
 			match("LIT");
 		}
 		else if (checkToken("ID")) {
@@ -2203,7 +2206,12 @@ public:
 		return result;
 	}
 	char* getSymbolAdress(string symbol) {
-		if (parser->symbolTable.find(symbol) == parser->symbolTable.end()) {
+		if ((symbol[0]>='a' && symbol[0]<='z') ||
+			(symbol[0] >= 'A' && symbol[0] <= 'Z')
+			) {
+			return (char*)symbol.c_str();
+		}
+		else if (parser->symbolTable.find(symbol) == parser->symbolTable.end()) {
 			abort("Variable: " + symbol + " is not declared!");
 		}
 		return (char*)parser->symbolTable[symbol].second.c_str();
@@ -2381,7 +2389,6 @@ public:
 					addressTemp[i] = temp[i];
 				int address = atoi(addressTemp);
 				string sub = temp.substr(pos + 1);
-				cout << address << endl;
 				for (int i = 0; i < sub.size(); i++)
 					saveChar(i + address, sub[i]);
 				saveChar(sub.size() + address, '\0');
@@ -2416,7 +2423,7 @@ public:
 	//size: varies
 	char* readArr(int address) {
 		string temp = "";
-		for (int i = 0; bytes[i] != '\n'; i++)
+		for (int i = address; bytes[i] != '\0'; i++)
 			temp += bytes[i];
 
 		char* ptr = new char[temp.size() + 1];
@@ -2510,11 +2517,18 @@ public:
 				}
 				break;
 			case 16://=
-				saveInt(mem[lineNo][2],
+				saveInt(mem[lineNo][2],readInt(mem[lineNo][1]));
+				break;
+			case 17:
+				saveInt(mem[lineNo][1],
 					readInt(mem[lineNo][1]));
 				break;
 			default:
 				flag = false;
+				break;
+			}
+			lineNo++;
+			if (lineNo > machineCodeGnerator->totalLines) {
 				break;
 			}
 		}
